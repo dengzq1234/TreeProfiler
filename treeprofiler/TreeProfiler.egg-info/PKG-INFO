@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: TreeProfiler
+Version: 1.0.0b0
+Summary: TreeProfiler is command-line tool for profiling metadata table into phylogenetic tree with descriptive analysis and output visualization
+Home-page: https://github.com/compgenomicslab/MetaTreeDrawer
+Author: Ziqi Deng, Jaime Huerta-Cepas
+Author-email: dengziqi1234@gmail.com, jhcepas@gmail.com
+Maintainer: Ziqi Deng
+Maintainer-email: dengziqi1234@gmail.com
+License: UNKNOWN
+Keywords: tree annotation,tree visualization,phylogeny,phylogenetics,phylogenomics
+Platform: UNKNOWN
+License-File: LICENSE
+
+UNKNOWN
+

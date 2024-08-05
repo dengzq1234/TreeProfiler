@@ -13,9 +13,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Set up Jekyll
-      uses:  helaili/jekyll-action@v2
-
     - name: Build the site
       run: bundle exec jekyll build
 

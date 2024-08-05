@@ -1,0 +1,34 @@
+name: GitHub Pages
+
+on:
+  push:
+    branches:
+      - gh-pages  # Make sure this matches your publishing branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Jekyll
+      uses: actions/setup-ruby@v1
+      with:
+        ruby-version: '2.7' # or the ruby version you want to use
+        bundler-version: '2.1.4'
+
+    - name: Install dependencies
+      run: |
+        gem install jekyll bundler
+        bundle install
+
+    - name: Build site
+      run: bundle exec jekyll build
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_site

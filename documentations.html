@@ -11,6 +11,10 @@
     <script src="_static/documentation_options.js?v=fbc843e6"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+<<<<<<< HEAD
+=======
+    <link rel="canonical" href="https://dengzq1234.github.io/TreeProfiler/documentations.html" />
+>>>>>>> 6eb408ab52ca61cd99ce2e075e7eb0e5440693e1
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Welcome to treeprofiler’s documentation!" href="index.html" />
@@ -192,6 +196,7 @@
 </li>
 <li><p><a class="reference internal" href="#query-in-internal-nodes" id="id90">Query in internal nodes</a></p></li>
 <li><p><a class="reference internal" href="#and-and-or-conditions" id="id91">AND and OR conditions</a></p></li>
+<<<<<<< HEAD
 <li><p><a class="reference internal" href="#conditional-limit-based-on-taxonomic-level" id="id92">Conditional limit based on taxonomic level</a></p></li>
 </ul>
 </li>
@@ -199,6 +204,16 @@
 </li>
 <li><p><a class="reference internal" href="#demo1-explore-gtdb-taxonomic-tree-with-metadata-and-habitat-information-of-progenome3" id="id93">Demo1 Explore GTDB taxonomic tree with metadata and habitat information of progenome3</a></p></li>
 <li><p><a class="reference internal" href="#demo2-explore-large-nifh-gene-tree-with-functional-and-taxonomic-information" id="id94">Demo2 Explore large NifH gene tree with functional and taxonomic information</a></p></li>
+=======
+</ul>
+</li>
+<li><p><a class="reference internal" href="#conditional-limit-based-on-taxonomic-level" id="id92">Conditional limit based on taxonomic level</a></p></li>
+<li><p><a class="reference internal" href="#choose-the-metric-for-internal-nodes-in-numerical-layout" id="id93">Choose the metric for internal nodes in numerical layout</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#demo1-explore-gtdb-taxonomic-tree-with-metadata-and-habitat-information-of-progenome3" id="id94">Demo1 Explore GTDB taxonomic tree with metadata and habitat information of progenome3</a></p></li>
+<li><p><a class="reference internal" href="#demo2-explore-large-nifh-gene-tree-with-functional-and-taxonomic-information" id="id95">Demo2 Explore large NifH gene tree with functional and taxonomic information</a></p></li>
+>>>>>>> 6eb408ab52ca61cd99ce2e075e7eb0e5440693e1
 </ul>
 </li>
 </ul>
@@ -3111,6 +3126,13 @@ choose among different predefined layouts.</p>
 <td><p>plot</p></td>
 <td><p>Enables users to highlight tree nodes that meet specific conditions.</p></td>
 </tr>
+<<<<<<< HEAD
+=======
+<tr class="row-even"><td><p>–internal-plot-measure {sum,avg,max,min,std,none}</p></td>
+<td><p>plot</p></td>
+<td><p>statistic measures to be shown in numerical layout for internal nodes. [default: avg]</p></td>
+</tr>
+>>>>>>> 6eb408ab52ca61cd99ce2e075e7eb0e5440693e1
 </tbody>
 </table>
 <section id="query-syntax">
@@ -3244,8 +3266,14 @@ choose among different predefined layouts.</p>
 </div>
 <img alt="highlighted_or" src="https://github.com/dengzq1234/treeprofiler_gallery/blob/main/highlighted_or.png?raw=true" />
 </section>
+<<<<<<< HEAD
 <section id="conditional-limit-based-on-taxonomic-level">
 <h4><a class="toc-backref" href="#id92" role="doc-backlink">Conditional limit based on taxonomic level</a><a class="headerlink" href="#conditional-limit-based-on-taxonomic-level" title="Link to this heading">¶</a></h4>
+=======
+</section>
+<section id="conditional-limit-based-on-taxonomic-level">
+<h3><a class="toc-backref" href="#id92" role="doc-backlink">Conditional limit based on taxonomic level</a><a class="headerlink" href="#conditional-limit-based-on-taxonomic-level" title="Link to this heading">¶</a></h3>
+>>>>>>> 6eb408ab52ca61cd99ce2e075e7eb0e5440693e1
 <p>Prune taxonomic annotated tree based on following taxonomic rank level,
 <code class="docutils literal notranslate"><span class="pre">kingdom</span></code>, <code class="docutils literal notranslate"><span class="pre">phylum</span></code>, <code class="docutils literal notranslate"><span class="pre">class</span></code>, <code class="docutils literal notranslate"><span class="pre">order</span></code>, <code class="docutils literal notranslate"><span class="pre">family</span></code>, <code class="docutils literal notranslate"><span class="pre">genus</span></code>, <code class="docutils literal notranslate"><span class="pre">species</span></code>, <code class="docutils literal notranslate"><span class="pre">subspecies</span></code></p>
 <p>case in GTDB in <code class="docutils literal notranslate"><span class="pre">examples/taxonomy_example/</span></code>:</p>
@@ -3269,10 +3297,34 @@ choose among different predefined layouts.</p>
 <img alt="prunt" src="https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_taxaprune2.png?raw=true" />
 <p>As you see, class branches of target gtdb tree are all pruned and only left the internal branches which rank as class.</p>
 </section>
+<<<<<<< HEAD
 </section>
 </section>
 <section id="demo1-explore-gtdb-taxonomic-tree-with-metadata-and-habitat-information-of-progenome3">
 <h2><a class="toc-backref" href="#id93" role="doc-backlink">Demo1 Explore GTDB taxonomic tree with metadata and habitat information of progenome3</a><a class="headerlink" href="#demo1-explore-gtdb-taxonomic-tree-with-metadata-and-habitat-information-of-progenome3" title="Link to this heading">¶</a></h2>
+=======
+<section id="choose-the-metric-for-internal-nodes-in-numerical-layout">
+<h3><a class="toc-backref" href="#id93" role="doc-backlink">Choose the metric for internal nodes in numerical layout</a><a class="headerlink" href="#choose-the-metric-for-internal-nodes-in-numerical-layout" title="Link to this heading">¶</a></h3>
+<p>Internal nodes of numerical data are process descriptive statistic analysis by default, hence when users collapse any branch, barplot_layout or heatmap_layout will demonstrate representative value, <code class="docutils literal notranslate"><span class="pre">avg</span></code> by default. Representative value can be changed by using <code class="docutils literal notranslate"><span class="pre">--internal-plot-measure</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># select max instead of avg as internal node plotting representative</span>
+<span class="n">treeprofiler</span> <span class="n">plot</span> \
+<span class="o">--</span><span class="n">tree</span> <span class="n">examples</span><span class="o">/</span><span class="n">basic_example1</span><span class="o">/</span><span class="n">basic_example1_annotated</span><span class="o">.</span><span class="n">ete</span> \
+<span class="o">--</span><span class="n">heatmap</span><span class="o">-</span><span class="n">layout</span> <span class="n">sample1</span><span class="p">,</span><span class="n">sample2</span><span class="p">,</span><span class="n">sample3</span><span class="p">,</span><span class="n">sample4</span><span class="p">,</span><span class="n">sample5</span> \
+<span class="o">--</span><span class="n">internal</span><span class="o">-</span><span class="n">plot</span><span class="o">-</span><span class="n">measure</span> <span class="nb">max</span>
+</pre></div>
+</div>
+<p>Before collapsed</p>
+<img alt="heatmap_uncollapsed" src="https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_heatmap_uncollapsed.jpeg?raw=true" />
+<p>After collapsed
+avg as internal plot measure</p>
+<img alt="heatmap_collapsed" src="https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_heatmap_collapsed.jpeg?raw=true" />
+<p>max as internal plot measure</p>
+<img alt="heatmap_max_collapsed" src="https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_heatmap_collapsed_max.jpeg?raw=true" />
+</section>
+</section>
+<section id="demo1-explore-gtdb-taxonomic-tree-with-metadata-and-habitat-information-of-progenome3">
+<h2><a class="toc-backref" href="#id94" role="doc-backlink">Demo1 Explore GTDB taxonomic tree with metadata and habitat information of progenome3</a><a class="headerlink" href="#demo1-explore-gtdb-taxonomic-tree-with-metadata-and-habitat-information-of-progenome3" title="Link to this heading">¶</a></h2>
+>>>>>>> 6eb408ab52ca61cd99ce2e075e7eb0e5440693e1
 <p>To illustrate the easiness and flexibility of TreeProfiler, we use it to annotate and visualize the version 202 of the GTDB prokaryotic phylogeny, which represents a species tree with 60,000 representative bacterial and archaeal species in <a class="reference external" href="https://data.gtdb.ecogenomic.org/releases/release202/">here</a>. GTDB provides the tree in plain newick format and massive datatable with various associated to such species. Apart from the metadata provided by the GTDB, here we also include annotations of genomes and species clusters to habitats from proGenomes3 (<a class="reference external" href="https://progenomes.embl.de/">Fullam et al. 2023</a>).</p>
 <p>Example can be found in directory <code class="docutils literal notranslate"><span class="pre">./examples/pratical/gtdb_r202/</span></code>. We already prepared the gtdb v202 taxonomic tree <code class="docutils literal notranslate"><span class="pre">gtdbv202.nw</span></code> by merging Bacteria and Archaea trees, detailed steps are included in <code class="docutils literal notranslate"><span class="pre">merge_gtdbtree.py</span></code>. Based on the difference of computational capacity, complete steps and pipeline can be found in <code class="docutils literal notranslate"><span class="pre">gtdbv202full_demo.sh</span></code> and <code class="docutils literal notranslate"><span class="pre">gtdbv202lite_demo.sh</span></code>.</p>
 <p>1) A glance of habitat information of progenome3</p>
@@ -3357,7 +3409,11 @@ choose among different predefined layouts.</p>
 <p>Annotated tree and layouts can be shown as circular tree layout.</p>
 </section>
 <section id="demo2-explore-large-nifh-gene-tree-with-functional-and-taxonomic-information">
+<<<<<<< HEAD
 <h2><a class="toc-backref" href="#id94" role="doc-backlink">Demo2 Explore large NifH gene tree with functional and taxonomic information</a><a class="headerlink" href="#demo2-explore-large-nifh-gene-tree-with-functional-and-taxonomic-information" title="Link to this heading">¶</a></h2>
+=======
+<h2><a class="toc-backref" href="#id95" role="doc-backlink">Demo2 Explore large NifH gene tree with functional and taxonomic information</a><a class="headerlink" href="#demo2-explore-large-nifh-gene-tree-with-functional-and-taxonomic-information" title="Link to this heading">¶</a></h2>
+>>>>>>> 6eb408ab52ca61cd99ce2e075e7eb0e5440693e1
 <p>Here we analyzed the nitrogenase iron protein NifH gene family across bacteria from EggNOG6 with EggNOG-mapper, a tool for functional annotation based on precomputed orthology assignments. TreeProfiler provides options which allows users to directly map EggNOG-mapper outputs including functional annotations and pfam/smart domain predictions. Hence are then able to map these functional annotations to their respective phylogenetic gene trees and them with the evolutionary history, tracing from leaf to root level.</p>
 <p>Map emapper annotation, pfam annotation and taxonomic annotation to target tree.</p>
 <p>Here we use example in <code class="docutils literal notranslate"><span class="pre">examples/pratical_example/emapper/</span></code>.</p>
@@ -3398,7 +3454,11 @@ choose among different predefined layouts.</p>
           
         </div>
       </div>
+<<<<<<< HEAD
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+=======
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+>>>>>>> 6eb408ab52ca61cd99ce2e075e7eb0e5440693e1
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="index.html">treeprofiler</a></h1>
 
@@ -3458,6 +3518,11 @@ choose among different predefined layouts.</p>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#conditional-query-in-annotated-tree-can-be-used-in-both-annotate-and-plot">Conditional query in annotated tree (can be used in both annotate and plot)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#query-syntax">Query Syntax</a></li>
+<<<<<<< HEAD
+=======
+<li class="toctree-l3"><a class="reference internal" href="#conditional-limit-based-on-taxonomic-level">Conditional limit based on taxonomic level</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#choose-the-metric-for-internal-nodes-in-numerical-layout">Choose the metric for internal nodes in numerical layout</a></li>
+>>>>>>> 6eb408ab52ca61cd99ce2e075e7eb0e5440693e1
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#demo1-explore-gtdb-taxonomic-tree-with-metadata-and-habitat-information-of-progenome3">Demo1 Explore GTDB taxonomic tree with metadata and habitat information of progenome3</a></li>
@@ -3500,7 +3565,11 @@ choose among different predefined layouts.</p>
       &#169;2024, Ziqi Deng & Jaime Huerta-Cepas.
       
       |
+<<<<<<< HEAD
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+=======
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
+>>>>>>> 6eb408ab52ca61cd99ce2e075e7eb0e5440693e1
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |

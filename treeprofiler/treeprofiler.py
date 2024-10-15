@@ -7,10 +7,10 @@ from treeprofiler import tree_annotate
 from treeprofiler import tree_plot
 
 
-__author__ = 'anonymous'
+__author__ = 'DENG Ziqi'
 __license__ = "GPL v3"
-__email__ = 'anonymous@gmail.com'
-__version__ = '1.1.0'
+__email__ = 'dengziqi1234@gmail.com'
+__version__ = '1.2.4'
 __date__ = '14-07-2023'
 __description__ = ('A program for profiling metadata on target '
                     'tree and conduct summary analysis')
@@ -26,17 +26,17 @@ def populate_main_args(main_args_p):
     group.add_argument('-t', '--tree',
         type=str,
         required=True,
-        help="Input tree, .nw file, customized tree input")
+        help="Input tree file in .nw (Newick) format. Use '-' to read from standard input.")
     group.add_argument('--annotated-tree',
         default=False,
         action='store_true',
         help="(deprecated) input tree already annotated by treeprofiler if you want to skip the annotate part.")
-    group.add_argument('--internal-parser',
+    group.add_argument('--internal',
         default="support",
         choices=["name", "support"],
         type=str,
         required=False,
-        help="To specify how to interpret internal nodes in newick format. [default: name]")
+        help="How to interpret the newick values of internal nodes. [default: name]")
     group.add_argument('--input-type',
         type=str,
         default="auto",
@@ -49,14 +49,14 @@ def populate_main_args(main_args_p):
         default=False,
         action='store_true',
         required=False,
-        help="Resolve polytomy in tree")
+        help="Preprocess tree by changing polytomies into series of dicotomies.")
     group = main_args_p.add_argument_group(title='Pruning parameters',
         description="Auto pruning parameters")
     group.add_argument('--rank-limit',
         type=str,
         help="TAXONOMIC_LEVEL prune annotate tree by rank limit")
     group.add_argument('--pruned-by',
-        type=str,
+        type=tree_plot.string_or_file,
         action='append',
         help='target tree pruned by customized conditions, such as --pruned_by "name contains FALPE"')
 

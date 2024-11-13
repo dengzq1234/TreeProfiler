@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "treeprofiler"
+description = "A command line tool to annotate and visualize metadata in phylogenetic tree."
+version = "1.2.4.1"
+authors = [
+  { name="Ziqi Deng", email="dengziqi1234@gmail.com" },
+  { name="Jaime Huerta-Cepas", email="jhcepas@gmail.com" },
+]
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Development Status :: 6 - Mature",
+  "Environment :: Console",
+  "Environment :: X11 Applications :: Qt",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Other Audience",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "Topic :: Scientific/Engineering :: Visualization",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+  "numpy==1.24",
+  "biopython>=1.8",
+  "selenium>=4.24.0",
+  "scipy>=1.8.0",
+  "matplotlib>=3.4.0",
+  "pymc>=5.0.0",
+  "pyvirtualdisplay",
+  "webdriver_manager>=4.0",
+  "aesara"
+]
+
+[project.urls]
+"Homepage" = "http://dengzq1234.github.io/TreeProfiler/"
+
+[project.scripts]
+treeprofiler = "treeprofiler:main"
+

@@ -11,7 +11,7 @@ def get_files(directory):
             file_list.append(file_path)
     return file_list
 
-VERSION = '1.2.0'
+VERSION = '2.0.2'
 install_requires = ['ete4', 'selenium', 'biopython','scipy']
 example_files = get_files('examples/')
 test_files = get_files('tests/')
@@ -31,16 +31,22 @@ setup(
     
     #package_dir = {'treeprofiler' : '' },
     packages=find_packages(),
+    include_package_data=True,
     package_data = { 
         'treeprofiler' : [
-            'treeprofiler/*',
+            'static/css/*',
+            'static/js/*',
+            'views/*.html',   
             'layouts/pfam2color.json',
             'layouts/smart2color.json',
             ],
         },
     #scripts=['treeprofiler.py'],
     entry_points = {
-        'console_scripts': ['treeprofiler=treeprofiler.treeprofiler:main']
+        'console_scripts': [
+            'treeprofiler=treeprofiler.treeprofiler:main',
+            'treeprofiler-desktop=treeprofiler.app:start_server',  # Link to app.py's start_server
+        ]
     },
     data_files=[
         ('examples', example_files),

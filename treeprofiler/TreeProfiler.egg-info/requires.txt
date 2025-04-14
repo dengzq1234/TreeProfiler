@@ -1,4 +1,0 @@
-ete4
-selenium
-biopython
-scipy

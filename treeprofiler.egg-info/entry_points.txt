@@ -1,0 +1,3 @@
+[console_scripts]
+treeprofiler = treeprofiler:main
+treeprofiler-desktop = treeprofiler.app:start_server

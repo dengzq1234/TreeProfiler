@@ -21,10 +21,10 @@ from ete4 import NCBITaxa
 
 from treeprofiler.tree_image import get_image
 
-# from ete4.smartview import TreeStyle, NodeStyle, TreeLayout
-# from treeprofiler.layouts import (
-#     text_layouts, taxon_layouts, staple_layouts, 
-#     conditional_layouts, seq_layouts, profile_layouts, phylosignal_layouts)
+from ete4.smartview import TreeStyle, NodeStyle, TreeLayout
+from treeprofiler.layouts import (
+    text_layouts, taxon_layouts, staple_layouts, 
+    conditional_layouts, seq_layouts, profile_layouts, phylosignal_layouts)
 
 import treeprofiler.src.utils as utils
 from treeprofiler.tree_annotate import can_convert_to_bool

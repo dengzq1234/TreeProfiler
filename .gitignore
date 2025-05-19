@@ -2,10 +2,10 @@
 dist/
 dist/*
 # Ignore build artifacts
-/build/
-/build/*
-/docs/build/
-/docs/build/*
+build/
+build/*
+docs/build/
+docs/build/*
 # Ignore Sphinx static files (if necessary)
 docs/source/_static/
 docs/source/_templates/
@@ -15,3 +15,6 @@ __pycache__/*
 .covarage
 .cache/
 .cache/*
+tests/htmlcov/
+tests/htmlcov/*
+

@@ -23,19 +23,14 @@ TreeProfiler requires
   - scipy >= 1.8.0
   - matplotlib >= 3.4
   - pymc >= 5.0.0
-  - aesara
   - pastml (custom)
 
 Quick install via pip
 ---------------------
 ::
 
-    # Install ETE Toolkit v4
-    pip install --force-reinstall https://github.com/etetoolkit/ete/archive/ete4.zip
-
-
-    # Install TreeProfiler dependencies
-    pip install biopython selenium scipy matplotlib pymc aesara
+    # Install ETE Toolkit v4 for treeprofiler
+    pip install "git+https://github.com/etetoolkit/ete.git@ete4_treeprofiler"
 
     # Install custom pastml package for ete4
     pip install "git+https://github.com/dengzq1234/pastml.git@pastml2ete4" 
@@ -112,24 +107,7 @@ Install ETE v4
 Quick way
 ::
 
-    pip install https://github.com/etetoolkit/ete/archive/ete4.zip
-
-For local development
-To install ETE in a local directory to help with the development, you can:
-
-- Clone this repository (git clone https://github.com/etetoolkit/ete.git)
-- Install dependecies
-  - If you are using conda: 
-
-  ``conda install -c conda-forge cython bottle brotli pyqt numpy<2.0``
-  
-  - Otherwise, you can install them with 
-  
-  ``pip install <dependencies>``
-  
-  - Build and install ete4 from the repository's root directory: 
-  
-  ``pip install -e .``
+    pip install --force-reinstall "git+https://github.com/etetoolkit/ete.git@ete4_treeprofiler"
 
 (In Linux there may be some cases where the gcc library must be installed, which can be done with ``conda install -c conda-forge gcc_linux-64``)
 
@@ -138,16 +116,18 @@ Install TreeProfiler
 Install dependencies
 ::
 
-    # install BioPython, selenium, scipy via conda
-    conda install -c conda-forge biopython selenium scipy matplotlib pymc
+    # Install custom pastml package for ete4
+    pip install "git+https://github.com/dengzq1234/pastml.git@pastml2ete4"
 
-    # or pip
-    pip install biopython selenium scipy matplotlib
 
 Install TreeProfiler
 ::
 
-    # install TreeProfiler
+    # Install TreeProfiler tool via pypi
+    pip install TreeProfiler
+
+    # Or install TreeProfiler
+    
     git clone https://github.com/compgenomicslab/TreeProfiler
     cd TreeProfiler/
     python setup.py install
@@ -869,7 +849,7 @@ example, here we use three different metadata: ``categorical.tsv``, ``numerical.
   
 Taxonomic annotation
 ~~~~~~~~~~~~~~~~~~~~
-Treeprofiler annotate tree node with target taxonomy, you can either use [GTDB](https://gtdb.ecogenomic.org/) or [NCBI](https://www.ncbi.nlm.nih.gov/) taxonomic database, such as following commands 
+Treeprofiler annotate tree node with target taxonomy, you can use [GTDB](https://gtdb.ecogenomic.org/), [NCBI](https://www.ncbi.nlm.nih.gov/) or [mOTUs](https://motus-db.org/) taxonomic database, such as following commands 
 
 .. list-table:: 
    :header-rows: 1
@@ -878,8 +858,8 @@ Treeprofiler annotate tree node with target taxonomy, you can either use [GTDB](
      - Description
    * - ``--taxon-column TAXON_COLUMN``
      - Choose the column in metadata which represents taxon for activating the taxonomic annotation. Default is the first column, which should be the column of leaf_name.
-   * - ``--taxadb {NCBI,GTDB,customdb}``
-     - NCBI or GTDB, choose the Taxonomic Database for annotation.
+   * - ``--taxadb {NCBI,GTDB, MOTUS, customdb}``
+     - NCBI, GTDB or MOTUS, choose the Taxonomic Database for annotation.
    * - ``--taxon-delimiter TAXON_DELIMITER``
      - Delimiter of taxa columns. ``[default: None]``
    * - ``--taxa-field TAXA_FIELD``
@@ -890,6 +870,8 @@ Treeprofiler annotate tree node with target taxonomy, you can either use [GTDB](
      - GTDB version for taxonomic annotation, such as 220. If it is not provided, the latest version will be used.
    * - ``--ignore-unclassified``
      - Ignore unclassified taxa in taxonomic annotation.
+   * - ``--sos-thr SOS_THR``
+     - Threshold for species overlap in evolutionary events [default: 0.0]
 
 
 In this part we will demostrate the usage of taxonomic annotation in examples of ``examples/taxonomy_example``
@@ -901,8 +883,8 @@ In this part we will demostrate the usage of taxonomic annotation in examples of
   demo3.tsv   demo4.tsv   gtdb_v202.tree      missing_ncbi.tree       show_tree_props.py
 
 
-Using different taxonomic databases from GTDB/NCBI
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using different taxonomic databases from GTDB/NCBI/mOTUs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To start taxonomic annotation, using ``--taxon-column`` and ``--taxadb`` to locate where is the taxon and which taxonomic databases to be used. If taxon is leaf name, then using ``--taxon-column name``. Otherwise ``--taxon-column <prop_name>`` which refers to the column in the metadata.
 
 Examples in NCBI taxonomic database
@@ -1022,6 +1004,43 @@ For gtdb taxa, users can choose ``--gtdb-version {95,202,207,214,220}`` to selec
   'sci_name': 's__Korarchaeum cryptofilum', 
   'species': 'GB_GCA_011358815.1', 
   'taxid': 'GB_GCA_011358815.1'
+  }
+
+Examples in mOTUs taxonomic database
+::
+
+  # check example tree
+  cat motus.tree 
+  ((mOTUv4.0_000001:0.3,mOTUv4.0_000003:0.4):0.2,(mOTUv4.0_000006:0.5,(mOTUv4.0_000008:0.3,mOTUv4.0_000010:0.4):0.2):0.3);
+
+  # run taxonomic annotation and locate taxon column in leaf name
+  treeprofiler annotate -t motus.tree --taxon-column name --taxadb motus -o ./
+
+  # check annotation results
+  python show_tree_props.py motus_annotated.nw
+  Target tree internal node Root contains the following properties:  
+  {
+  'name': 'Root', 
+  'rank': 'superkingdom', 
+  'sci_name': 'd__Bacteria', 
+  'taxid': 'd__Bacteria', 
+  'lineage': '1|4', 
+  'named_lineage': 'root|d__Bacteria', 
+  'evoltype': 'S', 
+  'lca': 'superkingdom--d__Bacteria', 
+  'common_name': ''
+  }
+  Target tree leaf node contains the following propertiies:  
+  {
+  'name': 'mOTUv4.0_000001', 
+  'dist': 0.3, 
+  'rank': 'subspecies', 
+  'sci_name': 's__Unknown Prevotella mOTUv4.0_000001', 
+  'taxid': 'mOTUv4.0_000001', 
+  'lineage': '1|4|12|13|14|15|16|17|18', 
+  'named_lineage': 'root|d__Bacteria|p__Bacteroidota|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Prevotella|s__Unknown Prevotella mOTUv4.0_000001|mOTUv4.0_000001', 'lca': 'superkingdom--d__Bacteria||phylum--p__Bacteroidota||class--c__Bacteroidia||order--o__Bacteroidales||family--f__Bacteroidaceae||genus--g__Prevotella||species--s__Unknown Prevotella mOTUv4.0_000001', 
+  'common_name': '', 
+  'species': 'mOTUv4.0_000001'
   }
 
 Identifying taxon names in different metadata fields/columns
@@ -1889,6 +1908,10 @@ Users can add the following flag to activate layouts for categorical data.
      - ``<prop1> <prop2>`` names of properties where values will be displayed on the aligned panel.
      - TextFace
      - Stacked Horizontal RecFace (only collapsed)
+   * - ``--textbranch-layout TEXTBRANCH_LAYOUT [TEXTBRANCH_LAYOUT ...]``
+     - ``<prop1> <prop2>`` names of properties where values will be displayed on the branch in text.
+     - TextFace of given property at the bottom of the branch
+     - TextFace of given property at the bottom of the branch
    * - ``--rectangle-layout RECTANGLE_LAYOUT [RECTANGLE_LAYOUT ...]``
      - ``<prop1> <prop2>`` names of properties where values will be labeled as rectangular color blocks on the aligned panel.
      - RecFace
@@ -1897,6 +1920,18 @@ Users can add the following flag to activate layouts for categorical data.
      - ``<prop1> <prop2>`` names of properties where branches will be colored based on different values.
      - Branch with color
      - Stacked Horizontal RecFace (only collapsed)
+   * - ``--circlenode-layout CIRCLENODE_LAYOUT [CIRCLENODE_LAYOUT ...]``
+     - ``<prop1> <prop2>`` names of properties where values will be displayed on the branch in the shape of cricle.
+     - Node shape become circles with color
+     - Node shape become circles with color
+   * - ``--squarenode-layout SQUARENODE_LAYOUT [SQUARENODE_LAYOUT ...]``
+     - ``<prop1> <prop2>`` names of properties where values will be displayed on the branch in the shape of square.
+     - Node shape become squares with color
+     - Node shape become squares with color
+   * - ``--trianglenode-layout TRIANGLENODE_LAYOUT [TRIANGLENODE_LAYOUT ...]``
+     - ``<prop1> <prop2>`` names of properties where values will be displayed on the branch in the shape of triangle.
+     - Node shape become triangles with color
+     - Node shape become triangles with color
    * - ``--bubble-layout BUBBLE_LAYOUT [BUBBLE_LAYOUT ...]``
      - ``<prop1> <prop2>`` names of properties where nodes will be colored based on different bubble.
      - Circles with color
@@ -1932,6 +1967,22 @@ Examples:
 
 .. image:: https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_label_layout.jpeg?raw=true
    :alt: label_layout example
+
+
+TextBranch Layout
+^^^^^^^^^^^^^^^^^^
+``--textbranch-layout`` will display the values of the given properties on the branch.
+
+Examples:
+::
+
+    treeprofiler plot \
+    --tree basic_example1_annotated.ete \
+    --input-type ete \
+    --textbranch-layout name
+
+.. image:: https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_textbranch_layout_name.png?raw=true
+   :alt: textbranch example
 
 Rectangle Layout
 ^^^^^^^^^^^^^^^^
@@ -1976,6 +2027,43 @@ If internal node doesn't have the given property, once it collapsed,  aligned pa
 
 .. image:: https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_colorbranch_layout_random.png?raw=true
     :alt: colorbranch_layout example
+
+
+CircleNode Layout
+^^^^^^^^^^^^^^^^^^
+``--circlenode-layout`` will color the node with the given property. It will be shown as circle on nodes.
+
+Circle with property that share from leaf to root:
+::
+
+    treeprofiler plot -t basic_example1_annotated.nw --circlenode-layout name
+
+.. image:: https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_circlenode_layout_name.png?raw=true
+    :alt: circle_name example
+
+SquareNode Layout
+^^^^^^^^^^^^^^^^^^
+``--squarenode-layout`` will color the node with the given property. It will be shown as Square on nodes.
+
+Square with property that share from leaf to root:
+::
+
+    treeprofiler plot -t basic_example1_annotated.nw --squarenode-layout name
+
+.. image:: https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_squarenode_layout_name.png?raw=true
+    :alt: square_name example
+
+TriangleNode Layout
+^^^^^^^^^^^^^^^^^^^
+``--trianglenode-layout`` will color the node with the given property. It will be shown as triangle on nodes.
+
+Triangle with property that share from leaf to root:
+::
+
+    treeprofiler plot -t basic_example1_annotated.nw --trianglenode-layout name
+
+.. image:: https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_trianglenode_layout_name.png?raw=true
+    :alt: triangle_name example
 
 Bubble Layout
 ^^^^^^^^^^^^^^
@@ -2043,7 +2131,7 @@ single value example
     --profiling-layout random_type
 
 .. image:: https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_profiling_layout_single.png?raw=true
-    :alt: profiling_layout example
+    :alt: profiling_layout_single example
 
 List value example
 :: 
@@ -2064,7 +2152,78 @@ List value example
     --profiling-layout list_data
 
 .. image:: https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_profiling_layout_list.png?raw=true
-    :alt: profiling_layout example
+    :alt: profiling_layout_list example
+
+
+Using ``--profiling-list PROFILING_LIST`` can choose the values what you want to display in profiling layout as presence-absence matrix. If input is None, it display all the values. If the values are not in the list, they will be ignored. 
+
+single value example with ``--profiling-list``
+::  
+
+    # check metadata
+    awk '{print $1,$7}' basic_example1_metadata1.tsv|head
+    #name random_type
+    Phy003I7ZJ_CHICK medium
+    Phy0054BO3_MELGA medium
+    Phy00508FR_NIPNI low
+    Phy004O1E0_APTFO medium
+    Phy004PA1B_ANAPL medium
+
+
+    treeprofiler plot \
+    --tree basic_example1_annotated.ete \
+    --input-type ete \
+    --profiling-layout random_type \
+    --profiling-list low medium
+
+.. image:: https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_profiling_layout_single_list.png?raw=true
+    :alt: profiling_layout_sinlge_list example
+
+List value example with ``--profiling-list``
+:: 
+
+    # check metadata
+    awk '{print $1,$3}' basic_example1_metadata2.tsv|head
+    #name list_data
+    Phy003I7ZJ_CHICK w,t,t
+    Phy0054BO3_MELGA r,q,s
+    Phy00508FR_NIPNI z,f,p
+    Phy004O1E0_APTFO z,t,b
+    Phy004PA1B_ANAPL z,r,p
+    Phy004TLNA_APAVI u,e,i
+
+    # convert each letter into presence/absence matrix
+    treeprofiler plot \
+    -t basic_example1_annotated.ete \
+    --profiling-layout list_data \
+    --profiling-list x y z
+
+.. image:: https://github.com/dengzq1234/treeprofiler_gallery/blob/main/plot_profiling_layout_list_list.png?raw=true
+    :alt: profiling_layout_list_list example
+
+Using ``--profiling-output``  can ouput the profiling matrix to a file.
+
+List value example with ``--profiling-list``
+:: 
+
+    # convert each letter into presence/absence matrix
+    treeprofiler plot \
+    -t basic_example1_annotated.ete \
+    --profiling-layout list_data \
+    --profiling-list x y z \
+    --profiling-output
+
+    head list_data_profiling.tsv
+    #name	x	y	z
+    Phy004OLZN_COLLI	0	1	0
+    Phy004OLZM_COLLI	0	0	0
+    Phy004UIZ8_CALAN	0	0	0
+    Phy004SNJQ_CHAVO	0	0	0
+    Phy00535AU_PYGAD	0	0	0
+    Phy004O1E0_APTFO	0	0	1
+    Phy004STVX_187382	1	0	0
+    Phy00527O5_PICPB	0	0	1
+    Phy004TLNA_APAVI	0	0	0
 
 
 Categorical Matrix Layout
@@ -2291,7 +2450,6 @@ A series of heatmap layout is only the matter how to normalize the value to show
 ``--heatmap-mean-layout`` values will be normalized between -1 and 1 by using the formula (val-mean)/(max-min)
 
 ``--heatmap-zscore-layout``  values will be Z-score normalized by using the formula (val-mean)/std.
-
 
 
 ``--heatmap-layout`` Examples:

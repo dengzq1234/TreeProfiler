@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "treeprofiler"
 description = "A command line tool to annotate and visualize metadata in phylogenetic tree."
-version = "2.0.1"
+version = "2.0.3"
 authors = [
   { name="Ziqi Deng", email="dengziqi1234@gmail.com" },
   { name="Jaime Huerta-Cepas", email="jhcepas@gmail.com" },
@@ -49,8 +49,15 @@ dependencies = [
 treeprofiler = "treeprofiler:main"
 treeprofiler-desktop = "treeprofiler.app:start_server"
 
+[tool.setuptools.packages.find]
+where = ["."]
+
 [tool.setuptools]
 include-package-data = true
 
-[tool.setuptools.packages.find]
-where = ["."]
+[tool.setuptools.package-data]
+treeprofiler = [
+  "examples/**/*",
+  "layouts/pfam2color.json",
+  "layouts/smart2color.json"
+]

@@ -694,7 +694,7 @@ def run_tree_annotate(tree, input_annotated_tree=False,
     return annotated_tree, prop2type
 
 
-def run_array_annotate(tree, array_dict, num_stat='none', column2method={}):
+def run_array_annotate(tree, array_dict, num_stat='none', column2method={}, prop2type={}):
     matrix_props = list(array_dict.keys())
     # annotate to the leaves
     start = time.time()
@@ -708,6 +708,7 @@ def run_array_annotate(tree, array_dict, num_stat='none', column2method={}):
     for node in tree.traverse():
         if not node.is_leaf:
             for prop in matrix_props:
+                
                 # get the array from the children leaf nodes
                 arrays = [child.get_prop(prop) for child in node.leaves() if child.get_prop(prop) is not None]
                 
@@ -715,10 +716,12 @@ def run_array_annotate(tree, array_dict, num_stat='none', column2method={}):
                     num_stat = column2method.get(prop)
 
                 stats = compute_matrix_statistics(arrays, num_stat=num_stat)
+                
                 if stats:
                     for stat, value in stats.items():
+                        
                         node.add_prop(utils.add_suffix(prop, stat), value.tolist())
-                        #prop2type[utils.add_suffix(prop, stat)] = float
+                        prop2type[utils.add_suffix(prop, stat)] = list
     end = time.time()
     logger.info(f'Time for run_array_annotate to run: {end - start}')
     return tree
@@ -915,7 +918,7 @@ def run(args):
     )
 
     if args.data_matrix:
-        annotated_tree = run_array_annotate(annotated_tree, array_dict, num_stat=args.num_stat, column2method=column2method)
+        annotated_tree = run_array_annotate(annotated_tree, array_dict, num_stat=args.num_stat, column2method=column2method, prop2type=prop2type)
         # update prop2type
         for filename in array_dict.keys():
             prop2type[filename] = list
@@ -954,12 +957,20 @@ def run(args):
         list_keys = [key for key, value in prop2type.items() if value == list]
         # Replace all commas in the tree with '||'
         list_sep = '||'
-        for node in annotated_tree.leaves():
-            for key in list_keys:
-                if node.props.get(key):
-                    cont2str = list(map(str, node.props.get(key)))
-                    list2str = list_sep.join(cont2str)
-                    node.add_prop(key, list2str)
+        if args.data_matrix and args.num_stat != 'none':
+            for node in annotated_tree.traverse():
+                for key in list_keys:
+                    if node.props.get(key):
+                        cont2str = list(map(str, node.props.get(key)))
+                        list2str = list_sep.join(cont2str)
+                        node.add_prop(key, list2str)
+        else:
+            for node in annotated_tree.leaves():
+                for key in list_keys:
+                    if node.props.get(key):
+                        cont2str = list(map(str, node.props.get(key)))
+                        list2str = list_sep.join(cont2str)
+                        node.add_prop(key, list2str)
 
                     
         avail_props = list(prop2type.keys())
@@ -996,7 +1007,7 @@ def check_missing(input_string):
     2) The exact strings "none", "None", "null", or "NaN".
     3) An empty string (zero characters).
     """
-    pattern = r'^(?:\W+|none|None|null|Null|NaN|)$'
+    pattern = r'^(?:\W+|none|None|null|Null|NaN|NA|)$'
     
     if input_string is None:
         return True
@@ -1967,6 +1978,13 @@ def parse_fasta(fastafile):
     return fasta_dict
 
 def _worker_function(iteration_data):
+
+    import hashlib
+    # Derive a unique seed per worker using time or iteration data
+    unique_string = str(iteration_data) + str(time.time())
+    seed = int(hashlib.sha256(unique_string.encode()).hexdigest(), 16) % (2**32)
+    np.random.seed(seed)
+    
     # Unpack the necessary data for one iteration
     prop2array, dump_tree, acr_discrete_columns_dict, prediction_method, model, ent_type, lambda0, se, sim, burn, thin, threads = iteration_data
 

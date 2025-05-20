@@ -25,6 +25,7 @@ from treeprofiler.tree_image import get_image
 # from treeprofiler.layouts import (
 #     text_layouts, taxon_layouts, staple_layouts, 
 #     conditional_layouts, seq_layouts, profile_layouts, phylosignal_layouts)
+from ete4.smartview import Layout, BASIC_LAYOUT
 
 import treeprofiler.src.utils as utils
 from treeprofiler.tree_annotate import can_convert_to_bool
@@ -370,7 +371,7 @@ def run(args):
     properties = {}
     rank2values = {}
     total_color_dict = []
-    layouts = []
+    layouts = [BASIC_LAYOUT]
     level = 1 # level 1 is the leaf name
 
     # Setup logger with error level
@@ -991,7 +992,7 @@ def run(args):
         get_image(tree, layouts, args.port, os.path.abspath(file_path))
     else:
         tree.explore(keep_server=True, compress=False, quiet=args.verbose, 
-        layouts=layouts, port=args.port, include_props=viz_props,
+        layouts=layouts, port=int(args.port), include_props=viz_props,
         show_leaf_name=args.hide_leaf_name, show_branch_support=args.hide_branch_support,
         show_branch_length=args.hide_branch_distance)
 
@@ -1261,7 +1262,6 @@ def get_label_layouts(tree, props, level, prop2type, column_width=70, padding_x=
                 sys.exit(1)
 
             color_dict = utils.assign_color_to_values(prop_values, paired_color)
-
         layout = text_layouts.LayoutText(name='Label_'+prop, column=level, 
         color_dict=color_dict, prop=prop, width=column_width, padding_x=padding_x, padding_y=padding_y)
         layouts.append(layout)

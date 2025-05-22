@@ -20,27 +20,50 @@ class LayoutText(Layout):
         self.padding_y = padding_y
         self.legend = legend
         self.active = active
-
+        self.default_collapsed_style = {
+                        'shape': 'outline', 
+                        #'stroke': '#0000FF',
+                        'stroke-width': 1,
+                        'fill': '#303030',
+                        'opacity': 0.5,
+                    }
         def draw_node(node, collapsed=False):
-            if node.is_leaf and node.props.get(self.prop) != '':
-                prop_text = node.props.get(self.prop)
-                if type(prop_text) == list:
+            # Get the property value
+            prop_text = node.props.get(self.prop)
+
+            # Skip if empty
+            if not prop_text:
+                return
+
+            # Only draw if node is a leaf or collapsed
+            if node.is_leaf or collapsed:
+                # Convert list to comma-separated string
+                if isinstance(prop_text, list):
                     prop_text = ",".join(prop_text)
                 else:
                     prop_text = str(prop_text)
-                font_color = self.color_dict.get(prop_text, 'black') 
-                style={'fill': font_color}
-                yield TextFace(prop_text,
-                        style=style,
-                        fs_min=self.min_fsize, fs_max=self.max_fsize,
-                        position='aligned', column=self.column)
-        
+
+                font_color = self.color_dict.get(prop_text, 'black')
+                style = {'fill': font_color}
+
+                # Yield a styled text face in the aligned column
+                yield TextFace(
+                    prop_text,
+                    style=style,
+                    fs_min=self.min_fsize,
+                    fs_max=self.max_fsize,
+                    position='aligned',
+                    column=self.column
+                )
+
         super().__init__(name=name,
                          draw_node=draw_node,
                          draw_tree=self.draw_tree,
                          active=active)
                          
     def draw_tree(self, tree):
+        # Provide collapsed node style
+        yield {"collapsed": self.default_collapsed_style}
         yield TextFace(self.prop, rotation=-45, position='header', column=self.column)
         yield LegendFace(title=self.name,
                     variable='discrete',

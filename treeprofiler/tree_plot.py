@@ -21,10 +21,10 @@ from ete4 import NCBITaxa
 
 from treeprofiler.tree_image import get_image
 
-# from ete4.smartview import TreeStyle, NodeStyle, TreeLayout
 # from treeprofiler.layouts import (
 #     text_layouts, taxon_layouts, staple_layouts, 
 #     conditional_layouts, seq_layouts, profile_layouts, phylosignal_layouts)
+from treeprofiler.layouts import text_layouts
 from ete4.smartview import Layout, BASIC_LAYOUT
 
 import treeprofiler.src.utils as utils
@@ -1262,10 +1262,12 @@ def get_label_layouts(tree, props, level, prop2type, column_width=70, padding_x=
                 sys.exit(1)
 
             color_dict = utils.assign_color_to_values(prop_values, paired_color)
+        
         layout = text_layouts.LayoutText(name='Label_'+prop, column=level, 
-        color_dict=color_dict, prop=prop, width=column_width, padding_x=padding_x, padding_y=padding_y)
+        color_dict=color_dict, prop=prop, width=column_width, padding_x=padding_x, padding_y=padding_y) 
         layouts.append(layout)
         level += 1
+    
     return layouts, level, prop_color_dict
 
 def get_colorbranch_layouts(tree, props, level, prop2type, column_width=70, padding_x=1, padding_y=0, color_config=None):

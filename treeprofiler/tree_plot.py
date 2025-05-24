@@ -248,10 +248,10 @@ def poplulate_plot_args(plot_args_p):
         nargs='+',
         required=False,
         help="<prop1> <prop2> names of properties where values will be label as rectangular color block on the aligned panel.")
-    group.add_argument('--piechart-layout',
-        nargs='+',
-        required=False,
-        help="<prop1> <prop2> names of properties whose internal nodes need to be plot as piechart-layout.")
+    # group.add_argument('--piechart-layout',
+    #     nargs='+',
+    #     required=False,
+    #     help="<prop1> <prop2> names of properties whose internal nodes need to be plot as piechart-layout.")
     group.add_argument('--heatmap-layout',
         nargs='+',
         required=False,
@@ -628,13 +628,13 @@ def run(args):
                     visualized_props.append(prop)
                     visualized_props.append(utils.add_suffix(prop, internal_num_rep))
 
-        if layout == "piechart-layout":
-            piechart_layouts = get_piechart_layouts(tree, args.piechart_layout, 
-            prop2type=prop2type, 
-            padding_x=args.padding_x, padding_y=args.padding_y, color_config=color_config)
-            layouts.extend(piechart_layouts)
-            visualized_props.extend(args.piechart_layout)
-            visualized_props.extend([utils.add_suffix(prop, 'counter') for prop in args.piechart_layout])
+        # if layout == "piechart-layout":
+        #     piechart_layouts = get_piechart_layouts(tree, args.piechart_layout, 
+        #     prop2type=prop2type, 
+        #     padding_x=args.padding_x, padding_y=args.padding_y, color_config=color_config)
+        #     layouts.extend(piechart_layouts)
+        #     visualized_props.extend(args.piechart_layout)
+        #     visualized_props.extend([utils.add_suffix(prop, 'counter') for prop in args.piechart_layout])
 
         if layout == 'rectangle-layout':
             rectangle_layouts, level, color_dict = get_rectangle_layouts(tree, args.rectangle_layout, 
@@ -1765,9 +1765,9 @@ def get_categorical_bubble_layouts(tree, props, level, prop2type, column_width=7
             # normal text prop
             color_dict = utils.assign_color_to_values(prop_values, paired_color)
 
-        layout = text_layouts.LayoutBubbleCategorical(name=f'Categorical-Bubble_{prop}', column=level, 
-        prop=prop, color_dict=color_dict, 
-        max_radius=max_radius, padding_x=padding_x, padding_y=padding_y)
+        layout = text_layouts.LayoutSymbolNode(name=f'Categorical-Bubble_{prop}', column=level, 
+        prop=prop, color_dict=color_dict, symbol='circle',
+        symbol_size=max_radius, padding_x=padding_x, padding_y=padding_y)
 
         layouts.append(layout)
         level += 1

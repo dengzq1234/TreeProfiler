@@ -110,7 +110,9 @@ class LayoutText(Layout):
         # Provide collapsed node style
         yield {"collapsed": self.default_collapsed_style}
         if self.position == 'aligned':
-            yield TextFace(self.prop, rotation=-45, position='header', column=self.column)
+            yield TextFace(self.prop, rotation=-45, 
+            fs_min=5, #fs_max=12,
+            position='header', column=self.column)
         if self.color_dict:
             colormap = self.color_dict
         else:
@@ -398,7 +400,9 @@ class LayoutRect(Layout):
     
     def draw_tree(self, tree):
         yield {"collapsed": self.default_collapsed_style}
-        yield TextFace(self.prop, rotation=-45, position='header', column=self.column)
+        yield TextFace(self.prop, rotation=-45, 
+        fs_min=5, #fs_max=12,
+        position='header', column=self.column)
         
         if self.color_dict:
             colormap = self.color_dict

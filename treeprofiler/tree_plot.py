@@ -1301,9 +1301,10 @@ def get_colorbranch_layouts(tree, props, level, prop2type, column_width=70, padd
             # normal text prop
             color_dict = utils.assign_color_to_values(prop_values, paired_color)
 
-        layout = text_layouts.LayoutColorbranch(name='ColorBranch_'+prop, column=level, \
+        layout = text_layouts.LayoutColorBranch(name='ColorBranch_'+prop, column=level, \
             color_dict=color_dict, prop=prop, width=column_width, \
                 padding_x=padding_x, padding_y=padding_y)
+        
         layouts.append(layout)
         level += 1
     return layouts, level, prop_color_dict
@@ -1318,9 +1319,10 @@ def get_textbranch_layouts(tree, props, level, prop2type, column_width=70, paddi
             if color_config.get(prop).get('value2color'):
                 color_dict = color_config.get(prop).get('value2color')
 
-        layout = text_layouts.LayoutTextbranch(name='TextBranch_'+prop, 
-        column=level, text_color=text_color, color_dict=color_dict, prop=prop, 
+        layout = text_layouts.LayoutText(name='TextBranch_'+prop, 
+        column=level, text_color=text_color, color_dict=color_dict, prop=prop, position='bottom',
         width=column_width, padding_x=padding_x, padding_y=padding_y)
+
         layouts.append(layout)
         level +=1 
 

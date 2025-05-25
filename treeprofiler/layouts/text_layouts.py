@@ -2,7 +2,7 @@ from collections import OrderedDict, namedtuple
 from math import pi
 import random, string
 from treeprofiler.src.utils import random_color, add_suffix
-
+from .custom_faces import BoxFace
 
 from ete4.smartview import Layout, TextFace, LegendFace
 
@@ -18,68 +18,6 @@ DEFAULT_COLLAPSED_STYLE = {
     'fill': '#303030',
     'opacity': 0.5,
 }
-
-class BoxedFace(Face):
-    """A shape defined by a box (with optionally a text inside)."""
-    # Base class for BoxFace and RectFace.
-
-    def __init__(self, wmax=None, hmax=None, text=None,
-                 position='top', column=0, anchor=None):
-        super().__init__(position, column, anchor)
-
-        self.wmax = wmax  # maximum width in pixels
-        self.hmax = hmax  # maximum height in pixels
-        self.text = TextFace(text) if type(text) is str else text
-
-        self.drawing_fn = None  # will be set by its subclasses
-
-    def draw(self, nodes, size, collapsed, zoom=(1, 1), ax_ay=(0, 0), r=1):
-        dx, dy = size
-        zx, zy = zoom
-
-        # Find the width and height so they are never bigger than the max.
-        assert dx > 0 or self.wmax is not None, 'wmax needed'
-        assert dy > 0 or self.hmax is not None, 'hmax needed'
-        w, h = self.wmax, self.hmax
-        if dx > 0:
-            w = min(w, dx)     if w is not None else dx
-        if dy > 0:
-            h = min(h, zy * r * dy) if h is not None else zy * r * dy
-
-        # Keep the ratio h/w if we had hmax in addition to wmax.
-        if self.hmax:
-            h_over_w = self.hmax / self.wmax
-
-            if h / w > h_over_w:
-                h = h_over_w * w
-            else:
-                w = h / h_over_w
-
-        # Return the graphics and their size.
-        size = Size(w, h/(r*zy))
-        box = make_box((0, 0), size)
-        graphics = [self.drawing_fn(box)]
-
-        if self.text:
-            # Draw the text centered in x (0.5). But we have to shift the y
-            # "by hand" because faces let the caller anchor in y afterwards
-            # (so several faces can be vertically stacked and then anchored).
-            graphics_text, size_text = self.text.draw(nodes, size, collapsed,
-                                                      zoom, (0.5, 0.5), r)
-            circular = False
-            shift = (0, (size.dy - size_text.dy) / 2)  # shift the y
-            graphics += gr.draw_group(graphics_text, circular, shift)
-
-        return graphics, size
-
-class BoxFace(BoxedFace):
-    """A box (with optionally a text inside)."""
-
-    def __init__(self, wmax=None, hmax=None, style='', text=None,
-                 position='top', column=0, anchor=None):
-        super().__init__(wmax, hmax, text, position, column, anchor)
-
-        self.drawing_fn = lambda box: gr.draw_box(box, style)
 
 class LayoutText(Layout):
     def __init__(self, name, column, color_dict, prop, text_color="black", width=70, 
@@ -111,7 +49,7 @@ class LayoutText(Layout):
         yield {"collapsed": self.default_collapsed_style}
         if self.position == 'aligned':
             yield TextFace(self.prop, rotation=-45, 
-            fs_min=5, #fs_max=12,
+            fs_min=self.min_fsize, #fs_max=12,
             position='header', column=self.column)
         if self.color_dict:
             colormap = self.color_dict
@@ -175,6 +113,8 @@ class LayoutColorBranch(Layout):
         
         self.padding_x = padding_x
         self.padding_y = padding_y
+        self.min_fsize = 5
+        self.max_fsize = 12
         self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
         self.active = active
 
@@ -216,8 +156,8 @@ class LayoutColorBranch(Layout):
             yield TextFace(
                 node.name,
                 style={'fill': line_color},
-                fs_min=5,
-                fs_max=12,
+                fs_min=self.min_fsize,
+                fs_max=self.max_fsize,
                 position="right",
                 column=self.column
             )
@@ -388,6 +328,8 @@ class LayoutRect(Layout):
         self.opacity = opacity
         self.padding_x = padding_x
         self.padding_y = padding_y
+        self.min_fsize = 5
+        self.max_fsize = 12
         self.legend = legend
         self.active = active
         self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
@@ -401,7 +343,7 @@ class LayoutRect(Layout):
     def draw_tree(self, tree):
         yield {"collapsed": self.default_collapsed_style}
         yield TextFace(self.prop, rotation=-45, 
-        fs_min=5, #fs_max=12,
+        fs_min=self.min_fsize, #fs_max=12,
         position='header', column=self.column)
         
         if self.color_dict:

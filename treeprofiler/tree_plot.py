@@ -24,7 +24,7 @@ from treeprofiler.tree_image import get_image
 # from treeprofiler.layouts import (
 #     text_layouts, taxon_layouts, staple_layouts, 
 #     conditional_layouts, seq_layouts, profile_layouts, phylosignal_layouts)
-from treeprofiler.layouts import text_layouts
+from treeprofiler.layouts import text_layouts, conditional_layouts
 from ete4.smartview import Layout, BASIC_LAYOUT
 
 import treeprofiler.src.utils as utils

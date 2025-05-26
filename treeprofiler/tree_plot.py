@@ -992,7 +992,7 @@ def run(args):
         get_image(tree, layouts, args.port, os.path.abspath(file_path))
     else:
         tree.explore(keep_server=True, compress=False, quiet=args.verbose, 
-        layouts=layouts, port=int(args.port), include_props=viz_props,
+        layouts=layouts, port=int(args.port), show_popup_props=viz_props,
         show_leaf_name=args.hide_leaf_name, show_branch_support=args.hide_branch_support,
         show_branch_length=args.hide_branch_distance)
 

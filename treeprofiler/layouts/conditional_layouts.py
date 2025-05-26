@@ -15,7 +15,107 @@ DEFAULT_COLLAPSED_STYLE = {
     'fill': '#303030',
     'opacity': 0.5,
 }
+class LayoutHighlight(Layout):
+    def __init__(self, name, color2conditions, column, prop2type=None, legend=True, width=70, padding_x=1, padding_y=0, active=True):
+        self.name = name
+        self.prop2type = prop2type
+        self.color2conditions = color2conditions
 
+        self.min_fsize = 5 
+        self.max_fsize = 15
+        self.width = 70
+        self.padding_x = padding_x
+        self.padding_y = padding_y
+        self.legend = legend
+        self.active = active
+        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+        super().__init__(name=name,
+                        draw_node=self.draw_node,
+                        draw_tree=self.draw_tree,
+                        active=active)
+
+    def draw_tree(self, tree):
+        yield {"collapsed": self.default_collapsed_style}
+        if self.legend:
+            colormap = {','.join(v) if isinstance(v, list) else v: k for k, v in self.color2conditions.items()}
+            yield LegendFace(title=self.name,
+                variable='discrete',
+                colormap=colormap
+                )
+
+        for color, conditions in self.color2conditions.items():
+            conditional_output = to_code(conditions)
+            for node in tree.traverse():
+                final_call = False
+                for condition in conditional_output:
+                    op = condition[1]
+                    if op == 'in':
+                        value = condition[0]
+                        prop = condition[2]
+                        datatype = self.prop2type.get(prop)
+                        final_call = call(node, prop, datatype, op, value)
+
+                    elif ':' in condition[0] :
+                        internal_prop, leaf_prop = condition[0].split(':')
+                        value = condition[2]
+                        datatype = self.prop2type[internal_prop]
+                        final_call = counter_call(node, internal_prop, leaf_prop, datatype, op, value)
+                    else:
+                        prop = condition[0]
+                        value = condition[2]
+                        datatype = self.prop2type.get(prop)
+                        final_call = call(node, prop, datatype, op, value)
+                    if final_call == False:
+                        break
+                    else:
+                        continue
+                
+                if final_call:
+                    #prop_face = SelectedRectFace(name='prop')
+                    node.add_prop(f'hl_{conditions}', color)  # highligh clade
+                    node.add_prop(f'hl_{conditions}_endnode', True)
+                    while (node):
+                        node = node.up
+                        if node:
+                            node.add_prop(f'hl_{conditions}', True)
+                
+                            #node.sm_style["hz_line_width"] = 5
+        return
+    
+    def draw_node(self, node, collapsed):
+        for color, conditions in self.color2conditions.items():
+            if not node.is_root:
+                if node.props.get(f'hl_{conditions}'):
+                    line_style = {
+                            # "hz-line": {
+                            #     "stroke": "red",
+                            #     "stroke-width": 5,
+                            #     "stroke-opacity": 1,
+                            # }, 
+                            "hz-line": {
+                                "stroke": "black",
+                                "stroke-width": 5,
+                                "stroke-opacity": 1,
+                            }
+                    }
+                    yield line_style
+                    
+                    if collapsed:
+                        fgopacity = {
+                            'fill': color,
+                            'opacity': 0.6,
+                        }
+                        yield {'collapsed': fgopacity}
+
+                    if node.props.get(f'hl_{conditions}_endnode'):
+                        yield {
+                                'box': 
+                                    {
+                                    'fill': color,
+                                    'opacity': 0.6,
+                                }
+                            }
+                        
 class LayoutBinary(Layout):
     def __init__(self, name, column, color='#E60A0A', \
             prop=None, reverse=False, aggregate=False, \
@@ -62,10 +162,7 @@ class LayoutBinary(Layout):
                     "True" : self.negative_color,
                     "NA": 'white'
                 }
-                tree_style.add_legend(title=title,
-                                    variable='discrete',
-                                    colormap=colormap,
-                                    )
+
             else:
                 title = 'Binary_' + self.prop
                 colormap = {
@@ -126,4 +223,3 @@ class LayoutBinary(Layout):
                 max_color=self.color, width=self.width, column=self.column)
             yield heatmapFace
         
-         

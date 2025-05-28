@@ -7,6 +7,11 @@ try:
 except ImportError:
     from treeprofiler.src.utils import strtobool
 
+def too_deep(node):
+    support = node.props.get('support', None)
+    if support:
+        return node.support > 0.50
+
 # Global default for collapsed nodes
 DEFAULT_COLLAPSED_STYLE = {
     'shape': 'outline',
@@ -15,6 +20,18 @@ DEFAULT_COLLAPSED_STYLE = {
     'fill': '#303030',
     'opacity': 0.5,
 }
+
+DEFAULT_TREE_STYLE = {
+    'collapsed': DEFAULT_COLLAPSED_STYLE,
+    #"is_leaf_fn": too_deep,
+}
+
+def collapsed_by_layout(conditions, color2conditions, level=1, prop2type={}):
+    print(conditions)
+    
+    DEFAULT_TREE_STYLE['is-leaf-fn'] = make_is_leaf_fn(conditions)
+    return DEFAULT_TREE_STYLE
+
 class LayoutHighlight(Layout):
     def __init__(self, name, color2conditions, column, prop2type=None, legend=True, width=70, padding_x=1, padding_y=0, active=True):
         self.name = name
@@ -28,14 +45,15 @@ class LayoutHighlight(Layout):
         self.padding_y = padding_y
         self.legend = legend
         self.active = active
-        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+        
         super().__init__(name=name,
                         draw_node=self.draw_node,
                         draw_tree=self.draw_tree,
                         active=active)
 
     def draw_tree(self, tree):
-        yield {"collapsed": self.default_collapsed_style}
+        yield DEFAULT_TREE_STYLE
+
         if self.legend:
             colormap = {','.join(v) if isinstance(v, list) else v: k for k, v in self.color2conditions.items()}
             yield LegendFace(title=self.name,
@@ -100,7 +118,7 @@ class LayoutHighlight(Layout):
                     }
                     yield line_style
                     
-                    if collapsed:
+                    if node in collapsed:
                         fgopacity = {
                             'fill': color,
                             'opacity': 0.6,

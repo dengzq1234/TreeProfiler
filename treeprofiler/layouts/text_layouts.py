@@ -61,7 +61,7 @@ class LayoutText(Layout):
                     colormap=colormap
                     )
 
-    def draw_node(self, node, collapsed=False):
+    def draw_node(self, node, collapsed):
         # Get the property value
         prop_text = node.props.get(self.prop)
 
@@ -137,7 +137,7 @@ class LayoutColorBranch(Layout):
             colormap=colormap
             )
     
-    def draw_node(self, node, collapsed=False):
+    def draw_node(self, node, collapsed):
         prop_text = node.props.get(self.prop)
         # Skip if empty
         if not prop_text:
@@ -234,7 +234,7 @@ class LayoutSymbolNode(Layout):
             )
         
     
-    def draw_node(self, node, collapsed=False):
+    def draw_node(self, node, collapsed):
         prop_text = node.props.get(self.prop)
         
         if prop_text is not None and prop_text != '':
@@ -296,7 +296,7 @@ class LayoutBackground(Layout):
             colormap=colormap
             )
         
-    def draw_node(self, node, collapsed=False):
+    def draw_node(self, node, collapsed):
         prop_text = node.props.get(self.prop)
 
         if prop_text is not None and prop_text != '':
@@ -356,7 +356,7 @@ class LayoutRect(Layout):
             colormap=colormap
             )
     
-    def draw_node(self, node, collapsed=False):
+    def draw_node(self, node, collapsed):
         prop_text = node.props.get(self.prop)
         if node.is_leaf:
             if prop_text is not None and prop_text != '':

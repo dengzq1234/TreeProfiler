@@ -430,6 +430,7 @@ def run(args):
                 
     if args.collapsed_by: # need to be wrap with quotes
         condition_strings = args.collapsed_by
+        
         for idx, condition in enumerate(condition_strings):
             if os.path.isfile(condition):
                 color2conditions = build_color2conditions(condition, args.config_sep)
@@ -438,7 +439,9 @@ def run(args):
                 condition_list = condition.split(syntax_sep)
                 color2conditions  = {}
                 color2conditions[paired_color[idx]] = condition_list
-            c_layout = conditional_layouts.LayoutCollapse(name='Collapsed-by_'+condition, color2conditions=color2conditions, column=level, prop2type = prop2type)
+            #c_layout = conditional_layouts.LayoutCollapse(name='Collapsed-by_'+condition, color2conditions=color2conditions, column=level, prop2type = prop2type)
+            c_layout = Layout("collapysed_by", 
+            draw_tree=conditional_layouts.collapsed_by_layout(condition, color2conditions, prop2type=prop2type))
             layouts.append(c_layout)
 
     # label node by condition

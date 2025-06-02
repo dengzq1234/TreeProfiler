@@ -7,10 +7,42 @@ try:
 except ImportError:
     from treeprofiler.src.utils import strtobool
 
-def too_deep(node):
-    support = node.props.get('support', None)
-    if support:
-        return node.support > 0.50
+# def too_deep(node):
+#     support = node.props.get('support', None)
+#     if support:
+#         return node.support > 0.50
+
+def make_is_leaf_fn(conditional_output, prop2type):
+    """
+    Return a function that will be assigned to 'is-leaf-fn'.
+    This function receives a node and returns True if all conditions are satisfied.
+    """
+
+    def is_leaf_fn(node):
+        for condition in conditional_output:
+            op = condition[1]
+            if op == 'in':
+                value = condition[0]
+                prop = condition[2]
+                datatype = prop2type.get(prop)
+                result = call(node, prop, datatype, op, value)
+
+            elif ':' in condition[0]:
+                internal_prop, leaf_prop = condition[0].split(':')
+                value = condition[2]
+                datatype = prop2type.get(internal_prop)
+                result = counter_call(node, internal_prop, leaf_prop, datatype, op, value)
+            else:
+                prop = condition[0]
+                value = condition[2]
+                datatype = prop2type.get(prop)
+                result = call(node, prop, datatype, op, value)
+
+            if not result:
+                return False  # if any condition fails, do not collapse
+        return True  # all conditions passed
+
+    return is_leaf_fn
 
 # Global default for collapsed nodes
 DEFAULT_COLLAPSED_STYLE = {
@@ -27,10 +59,11 @@ DEFAULT_TREE_STYLE = {
 }
 
 def collapsed_by_layout(conditions, color2conditions, level=1, prop2type={}):
-    print(conditions)
-    
-    DEFAULT_TREE_STYLE['is-leaf-fn'] = make_is_leaf_fn(conditions)
-    return DEFAULT_TREE_STYLE
+    for color, conditions in color2conditions.items():
+        conditional_output = to_code(conditions)
+        DEFAULT_TREE_STYLE['is-leaf-fn'] = make_is_leaf_fn(conditional_output, prop2type)
+        DEFAULT_TREE_STYLE['collapsed']['fill'] = color
+        return DEFAULT_TREE_STYLE
 
 class LayoutHighlight(Layout):
     def __init__(self, name, color2conditions, column, prop2type=None, legend=True, width=70, padding_x=1, padding_y=0, active=True):

@@ -440,6 +440,7 @@ def run(args):
                 color2conditions  = {}
                 color2conditions[paired_color[idx]] = condition_list
             #c_layout = conditional_layouts.LayoutCollapse(name='Collapsed-by_'+condition, color2conditions=color2conditions, column=level, prop2type = prop2type)
+
             c_layout = Layout("collapysed_by", 
             draw_tree=conditional_layouts.collapsed_by_layout(condition, color2conditions, prop2type=prop2type))
             layouts.append(c_layout)

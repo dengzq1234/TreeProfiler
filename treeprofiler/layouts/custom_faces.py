@@ -117,13 +117,13 @@ class BoxedFace(Face):
     # Base class for BoxFace and RectFace.
 
     def __init__(self, wmax=None, hmax=None, text=None,
-                 position='top', column=0, anchor=None):
+                 position='top', column=0, anchor=None, zoomable=True):
         super().__init__(position, column, anchor)
 
         self.wmax = wmax  # maximum width in pixels
         self.hmax = hmax  # maximum height in pixels
         self.text = TextFace(text) if type(text) is str else text
-
+        self.zoomable = zoomable  # whether to scale the size with zoom
         self.drawing_fn = None  # will be set by its subclasses
 
     def draw(self, nodes, size, collapsed, zoom=(1, 1), ax_ay=(0, 0), r=1):
@@ -149,7 +149,10 @@ class BoxedFace(Face):
                 w = h / h_over_w
 
         # Return the graphics and their size.
-        size = Size(w, h/(r*zy))
+        if self.zoomable:
+            size = Size(w, h/(r*zy))
+        else:
+            size = Size(w/zx, h/(r*zy))
         box = make_box((0, 0), size)
         graphics = [self.drawing_fn(box)]
 
@@ -169,7 +172,55 @@ class BoxFace(BoxedFace):
     """A box (with optionally a text inside)."""
 
     def __init__(self, wmax=None, hmax=None, style='', text=None,
-                 position='top', column=0, anchor=None):
-        super().__init__(wmax, hmax, text, position, column, anchor)
+                 position='top', column=0, anchor=None, zoomable=True):
+        super().__init__(wmax, hmax, text, position, column, anchor, zoomable)
 
         self.drawing_fn = lambda box: gr.draw_box(box, style)
+
+
+class RotatedTextRectFace(BoxedFace):
+    """A rectangle face that allows text inside to be rotated."""
+
+    def __init__(self, wmax, hmax=None, text="", rotation=0, style='',
+                 font_size=12, text_fill="black", position='top', column=0, anchor=None):
+        """
+        :param wmax: Maximum width of the rectangle.
+        :param hmax: Maximum height of the rectangle.
+        :param text: Text to display inside the rectangle.
+        :param rotation: Rotation angle (in degrees) of the text.
+        :param style: Dictionary of styling options for the rectangle.
+        :param font_size: Font size for the text.
+        :param text_fill: Color of the text.
+        :param position: Position of the face (aligned, header, etc.).
+        :param column: Column position for alignment.
+        :param anchor: Anchor point (controls positioning).
+        """
+        super().__init__(wmax, hmax, text, position, column, anchor)
+
+        self.style = style
+        self.font_size = font_size  # Custom font size
+        self.text_fill = text_fill  # Text color
+        self.rotation = rotation
+        self.text = TextFace(text, rotation=self.rotation) if type(text) is str else text
+        
+        # Set the drawing function from BoxedFace
+        self.drawing_fn = lambda box: gr.draw_box(box, self.style)
+
+    def draw(self, nodes, size, collapsed, zoom=(1, 1), ax_ay=(0, 0), r=1):
+        """
+        Draws a rotated rectangle with text inside.
+        """
+        graphics, size = super().draw(nodes, size, collapsed, zoom, ax_ay, r)
+        
+        if self.text:
+            #self.text.rotation = self.rotation
+            # Draw the text centered in x (0.5). But we have to shift the y
+            # "by hand" because faces let the caller anchor in y afterwards
+            # (so several faces can be vertically stacked and then anchored).
+            graphics_text, size_text = self.text.draw(nodes, size, collapsed,
+                                                      zoom, (0.5, 0.5), r)
+            circular = False
+            shift = (0, (size.dy - size_text.dy) / 2)  # shift the y
+            graphics += gr.draw_group(graphics_text, circular, shift)
+
+        return graphics, size

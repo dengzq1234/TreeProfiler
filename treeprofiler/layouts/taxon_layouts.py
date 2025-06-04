@@ -2,10 +2,9 @@ from collections import OrderedDict, namedtuple
 from math import pi
 import random, string
 from treeprofiler.src.utils import random_color, add_suffix
-from .custom_faces import BoxFace
+from .custom_faces import BoxFace, RotatedTextRectFace
 
 from ete4.smartview import Layout, TextFace, LegendFace
-
 from ete4.smartview.faces import Face
 import ete4.smartview.graphics as gr
 from ete4.smartview.coordinates import Size, Box, make_box
@@ -49,9 +48,8 @@ def first_name(tree):
 
     return next(iter(sci_names))
 
-class TaxonClade(Layout):
+class TaxaClade(Layout):
     def __init__(self, name, level, rank, color_dict, active=True, legend=True):
-        super().__init__(name, aligned_faces=True, active=active)
 
         # self.activate = False
         self.name = name
@@ -59,39 +57,180 @@ class TaxonClade(Layout):
         self.rank = rank
         self.color_dict = color_dict
         self.legend = legend
+        self.line_width = 2
+        self.line_opacity = 0.8
+        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+        
+        super().__init__(name=name,
+                         draw_node=self.draw_node,
+                         draw_tree=self.draw_tree,
+                         active=active)
 
-    def set_tree_style(self, tree, tree_style):
-        super().set_tree_style(tree, tree_style)
-        if self.legend:
-            if self.color_dict:
-                tree_style.add_legend(title=self.rank,
-                                    variable='discrete',
-                                    colormap=self.color_dict,
-                                    )
+    def draw_tree(self, tree):
+        # Provide collapsed node style
+        yield {"collapsed": self.default_collapsed_style}
+        if self.color_dict:
+            colormap = self.color_dict
+        else:
+            colormap = {}
+        
+        yield LegendFace(title=self.rank,
+            variable='discrete',
+            colormap=colormap
+            )
 
-    def set_node_style(self, node):
+    def draw_node(self, node, collapsed):
         named_lineage = node.props.get('named_lineage', None)
-
         if named_lineage:
             if isinstance(named_lineage, str):
                 named_lineage = named_lineage.split('|')
 
             for clade, color in self.color_dict.items():
                 if clade in named_lineage:
-                    node.sm_style["hz_line_color"] = color
-                    node.sm_style["hz_line_width"] = 2
-                    node.sm_style["vt_line_color"] = color
-                    node.sm_style["vt_line_width"] = 2
-                    #node.sm_style["draw_descendants"] = False
-                    node.sm_style["outline_color"] = color
-                    break
+                    line_style = {
+                        "hz-line": {
+                        "stroke": color,
+                        "stroke-width": self.line_width,
+                        "stroke-opacity": self.line_opacity,
+                        }, 
+                        "vt-line": {
+                            "stroke": color,
+                            "stroke-width": self.line_width,
+                            "stroke-opacity": self.line_opacity,
+                        }
+                    }
+                    yield line_style
+                    if collapsed:
+                        yield {
+                            "collapsed": {
+                                'shape': 'outline',
+                                'stroke': color,
+                                'stroke-width': self.line_width,
+                                'fill': color,
+                                'opacity': self.line_opacity,
+                            }
+                        }
 
-        if not node.is_leaf:
-            # Collapsed face
-            if node.props.get('rank') == self.rank:
-                if node.props.get('sci_name') is not None:
-                    sci_name = node.props.get('sci_name')
-                    color = self.color_dict.get(sci_name, 'gray')
-                    node.add_face(TextFace(sci_name, padding_x=2, color = color),
-                        position="branch_right", column=1, collapsed_only=True)
+class TaxaRectangular(Layout):
+    def __init__(self, name="Last common ancestor", rank=None, color_dict={}, rect_width=20, column=0, padding_x=1, padding_y=0, legend=True, active=True):
+        self.rank = rank
+        self.color_dict = color_dict
+        self.rect_width = rect_width
+        self.column = column
+        self.padding_x = padding_x
+        self.padding_y = padding_y
+        self.active = active
+        
+        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+        
+        super().__init__(name=name,
+                         draw_node=self.draw_node,
+                         draw_tree=self.draw_tree,
+                         active=active)
+
+    def draw_tree(self, tree):
+        # Provide collapsed node style
+        yield {"collapsed": self.default_collapsed_style}
+        if self.color_dict:
+            colormap = self.color_dict
+        else:
+            colormap = {}
+        
+        yield LegendFace(title=self.rank,
+            variable='discrete',
+            colormap=colormap
+            )
+    
+    def draw_node(self, node, collapsed):
+        lca_value = node.props.get('lca')
+        if not lca_value:
+            return
+
+        lca_dict = memoized_string_to_dict(lca_value)
+        lca = lca_dict.get(self.rank, None)
+        if not lca:
+            return
+
+        # Check if parent has the same LCA
+        parent = node.up
+        parent_lca = None
+        if parent and parent.props.get('lca'):
+            parent_lca_dict = memoized_string_to_dict(parent.props['lca'])
+            parent_lca = parent_lca_dict.get(self.rank, None)
+
+        # Skip drawing if parent's LCA is the same
+        if parent_lca == lca:
+            return
+        
+        # Draw LCA band since parent is different (or missing)
+        color = self.color_dict.get(lca, 'lightgray')
+        lca_face = TextFace(lca, rotation=90, style={'fill': 'black'}, position = 'aligned')
+        yield BoxFace(
+            wmax=self.rect_width,
+            hmax=None,
+            text=lca_face, 
+            column=self.column,
+            position='aligned',
+            style={'fill': color, 'opacity': 1},
+            zoomable=False
+        )
+
+class LayoutSciName(Layout):
+    def __init__(self, name="Scientific name", color_dict={}, sci_prop='sci_name', active=True):
+        self.color_dict = color_dict
+        self.sci_prop = sci_prop
+        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+        
+        super().__init__(name=name,
+                         draw_node=self.draw_node,
+                         active=active)
+
+    def draw_node(self, node, collapsed):
+        if node.is_leaf:
+            sci_name = node.props.get(self.sci_prop)
+            prot_id = node.name
+
+            rank_colordict = self.color_dict.get(node.props.get('rank'),'')
+            if rank_colordict:
+                color = rank_colordict.get(sci_name, 'gray')
+            else:
+                color = 'gray'
+            style = {'fill': color}
+
+            # node.add_face(TextFace(sci_name, color = color, padding_x=2, min_fsize=4, max_fsize=25),
+            #     column=0, position="branch_right")
+
+            yield TextFace(
+                sci_name,
+                style=style,
+                fs_min=4,
+                fs_max=25,
+                position="right",
+                
+            )
             
+            if prot_id:
+                if len(prot_id) > 40:
+                    prot_id = prot_id[0:37] + " ..."
+           
+            #node.add_face(TextFace(prot_id, color = 'Gray', padding_x=2), column = 2, position = "aligned")
+        if collapsed:
+            # Collapsed face
+            names = summary(node.children)
+            texts = names if len(names) < 6 else (names[:3] + ['...'] + names[-2:])
+            for i, text in enumerate(texts):
+                sci_name = node.props.get(self.sci_prop)
+                rank_colordict = self.color_dict.get(node.props.get('rank'),'')
+                if rank_colordict:
+                    color = rank_colordict.get(sci_name, 'gray')
+                else:
+                    color = 'gray'
+                style = {'fill': color}
+                yield TextFace(
+                    text,
+                    style=style,
+                    fs_min=4,
+                    fs_max=25,
+                    position="right",                    
+                )
+

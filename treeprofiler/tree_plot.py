@@ -24,7 +24,7 @@ from treeprofiler.tree_image import get_image
 # from treeprofiler.layouts import (
 #     text_layouts, taxon_layouts, staple_layouts, 
 #     conditional_layouts, seq_layouts, profile_layouts, phylosignal_layouts)
-from treeprofiler.layouts import text_layouts, conditional_layouts
+from treeprofiler.layouts import text_layouts, conditional_layouts, taxon_layouts
 from ete4.smartview import Layout, BASIC_LAYOUT
 
 import treeprofiler.src.utils as utils
@@ -840,7 +840,7 @@ def run(args):
             # Taxa layouts
             taxon_color_dict = {}
             taxa_layouts = []
-            band_width = args.column_width * 0.75
+            band_width = args.column_width 
             # generate a rank2values dict for pre taxonomic annotated tree
             if not rank2values:
                 rank2values = defaultdict(list)
@@ -870,9 +870,9 @@ def run(args):
                 color_dict = utils.assign_color_to_values(value, paired_color[::1])
                 active = False
                 
-                if args.taxoncollapse_layout:
-                    taxa_layout = taxon_layouts.TaxaCollapse(name='TaxaCollapse_'+rank, rect_width=band_width, rank=rank, color_dict=color_dict, column=level, active=active)
-                    taxa_layouts.append(taxa_layout)
+                # if args.taxoncollapse_layout:
+                #     taxa_layout = taxon_layouts.TaxaCollapse(name='TaxaCollapse_'+rank, rect_width=band_width, rank=rank, color_dict=color_dict, column=level, active=active)
+                #     taxa_layouts.append(taxa_layout)
 
                 if args.taxonrectangle_layout:
                     taxa_layout = taxon_layouts.TaxaRectangular(name='TaxaRect_'+rank, rect_width=band_width, rank=rank, color_dict=color_dict, column=level, active=active)
@@ -882,17 +882,16 @@ def run(args):
                     taxa_layout = taxon_layouts.TaxaClade(name='TaxaClade_'+rank, level=level, rank=rank, color_dict=color_dict, active=active)
                     taxa_layouts.append(taxa_layout)
 
-                taxa_layout = taxon_layouts.TaxaLCA(name='TaxaLCA_'+rank, rect_width=band_width, rank=rank, color_dict=color_dict, column=level, active=active)
-                taxa_layouts.append(taxa_layout)
-                
+                #taxa_layout = taxon_layouts.TaxaLCA(name='TaxaLCA_'+rank, rect_width=band_width, rank=rank, color_dict=color_dict, column=level, active=active)
+                #taxa_layouts.append(taxa_layout)
                 taxon_color_dict[rank] = color_dict
             
             taxa_layouts.append(taxon_layouts.LayoutSciName(name = 'Taxa_Scientific_name', color_dict=taxon_color_dict))
-            taxa_layouts.append(taxon_layouts.LayoutEvolEvents(name = 'Taxa_Evolutionary_events', prop="evoltype",
-                speciation_color="blue", 
-                duplication_color="red", node_size=3,
-                active=False, legend=True))
-
+            # taxa_layouts.append(taxon_layouts.LayoutEvolEvents(name = 'Taxa_Evolutionary_events', prop="evoltype",
+            #     speciation_color="blue", 
+            #     duplication_color="red", node_size=3,
+            #     active=False, legend=True))
+            
             layouts = layouts + taxa_layouts
             level += 1
             total_color_dict.append(taxon_color_dict)

@@ -61,9 +61,10 @@ DEFAULT_TREE_STYLE = {
 def collapsed_by_layout(conditions, color2conditions, level=1, prop2type={}):
     for color, conditions in color2conditions.items():
         conditional_output = to_code(conditions)
-        DEFAULT_TREE_STYLE['is-leaf-fn'] = make_is_leaf_fn(conditional_output, prop2type)
-        DEFAULT_TREE_STYLE['collapsed']['fill'] = color
-        return DEFAULT_TREE_STYLE
+        style = DEFAULT_TREE_STYLE.copy()
+        style['is-leaf-fn'] = make_is_leaf_fn(conditional_output, prop2type)
+        style['collapsed']['fill'] = color
+        return style
 
 class LayoutHighlight(Layout):
     def __init__(self, name, color2conditions, column, prop2type=None, legend=True, width=70, padding_x=1, padding_y=0, active=True):

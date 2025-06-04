@@ -22,6 +22,42 @@ DEFAULT_COLLAPSED_STYLE = {
     'fill': '#303030',
     'opacity': 0.5,
 }
+DEFAULT_TREE_STYLE = {
+    'collapsed': DEFAULT_COLLAPSED_STYLE,
+}
+
+TAXONOMIC_RANK_ORDER = [
+    "no rank",  # for root if needed
+    "superkingdom",
+    "kingdom",
+    "subkingdom",
+    "superphylum",
+    "phylum",
+    "subphylum",
+    "superclass",
+    "class",
+    "subclass",
+    "infraclass",
+    "cohort",
+    "superorder",
+    "order",
+    "suborder",
+    "infraorder",
+    "parvorder",
+    "superfamily",
+    "family",
+    "subfamily",
+    "tribe",
+    "subtribe",
+    "genus",
+    "subgenus",
+    "species_group",
+    "species_subgroup",
+    "species",
+    "subspecies",
+    "varietas",
+    "forma"
+]
 
 @lru_cache(maxsize=5000)
 def memoized_string_to_dict(s):
@@ -165,6 +201,7 @@ class TaxaRectangular(Layout):
         # Draw LCA band since parent is different (or missing)
         color = self.color_dict.get(lca, 'lightgray')
         lca_face = TextFace(lca, rotation=90, style={'fill': 'black'}, position = 'aligned')
+        
         yield BoxFace(
             wmax=self.rect_width,
             hmax=None,
@@ -174,6 +211,76 @@ class TaxaRectangular(Layout):
             style={'fill': color, 'opacity': 1},
             zoomable=False
         )
+
+def make_is_leaf_fn(collapse_rank):
+    """
+    Returns a function used by 'is-leaf-fn' that collapses nodes at or below a given rank.
+    """
+    def is_leaf_fn(node):
+        node_rank = node.props.get("rank")
+        lca_str = node.props.get("lca", "")
+        if not node_rank or not lca_str:
+            return False  # Do not collapse if missing info
+
+        # Convert "lca" string to dict, e.g. {"phylum": "p__X", ...}
+        lca_dict = memoized_string_to_dict(lca_str)
+        lca = lca_dict.get(collapse_rank, None)
+        # Determine if node's lineage includes the target rank
+        if collapse_rank in lca_dict:
+            # Compare rank positions
+            try:
+                node_rank_idx = TAXONOMIC_RANK_ORDER.index(node_rank)
+                collapse_rank_idx = TAXONOMIC_RANK_ORDER.index(collapse_rank)
+                # Collapse nodes at or below the desired rank
+                return node_rank_idx >= collapse_rank_idx
+            except ValueError:
+                return False  # If unknown rank, don’t collapse
+        return False  # Not even in the lineage
+
+    return is_leaf_fn
+
+def collapsed_by_rank(rank):
+    style = DEFAULT_TREE_STYLE.copy() # otherwise it will be modified in place
+    style['is-leaf-fn'] = make_is_leaf_fn(rank)
+    return style
+
+def draw_collapsed_node(rank, color_dict, rect_width=20, column=0):
+    def draw_node(node, collapsed):
+        node_rank = node.props.get('rank')
+        node_sciname = node.props.get('sci_name')
+        named_lineage = node.props.get('named_lineage', None)
+        
+        lca_value = node.props.get('lca')
+        if lca_value:
+            lca_dict = memoized_string_to_dict(lca_value)
+            lca = lca_dict.get(rank, None)
+            if lca:
+                color = color_dict.get(lca, 'lightgray')
+        
+                if node.is_leaf or collapsed:
+                    lca_face = TextFace(lca, rotation=90, style={'fill': 'black'}, position = 'aligned')
+        
+                    yield BoxFace(
+                        wmax=rect_width,
+                        hmax=None,
+                        text=lca_face, 
+                        column=column,
+                        position='aligned',
+                        style={'fill': color, 'opacity': 1},
+                        zoomable=False
+                    )
+        return
+    return draw_node
+
+# class TaxaCollapse(Layout):
+#     def __init__(self, name="Taxa collapsed", rank=None, color_dict={}, rect_width=20, column=0, padding_x=1, padding_y=0, legend=True, active=True):
+#         self.rank = rank
+#         self.color_dict=color_dict
+#         self.rect_width = rect_width
+#         self.column = column
+#         self.padding_x = padding_x
+#         self.padding_y = padding_y
+#         self.active = active
 
 class LayoutSciName(Layout):
     def __init__(self, name="Scientific name", color_dict={}, sci_prop='sci_name', active=True):

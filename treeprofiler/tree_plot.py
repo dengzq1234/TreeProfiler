@@ -882,15 +882,15 @@ def run(args):
                     taxa_layout = taxon_layouts.TaxaClade(name='TaxaClade_'+rank, level=level, rank=rank, color_dict=color_dict, active=active)
                     taxa_layouts.append(taxa_layout)
 
-                #taxa_layout = taxon_layouts.TaxaLCA(name='TaxaLCA_'+rank, rect_width=band_width, rank=rank, color_dict=color_dict, column=level, active=active)
-                #taxa_layouts.append(taxa_layout)
+                taxa_layout = taxon_layouts.TaxaLCA(name='TaxaLCA_'+rank, rect_width=band_width, rank=rank, color_dict=color_dict, column=level, active=active)
+                taxa_layouts.append(taxa_layout)
                 taxon_color_dict[rank] = color_dict
             
             taxa_layouts.append(taxon_layouts.LayoutSciName(name = 'Taxa_Scientific_name', color_dict=taxon_color_dict))
-            # taxa_layouts.append(taxon_layouts.LayoutEvolEvents(name = 'Taxa_Evolutionary_events', prop="evoltype",
-            #     speciation_color="blue", 
-            #     duplication_color="red", node_size=3,
-            #     active=False, legend=True))
+            taxa_layouts.append(taxon_layouts.LayoutEvolEvents(name = 'Taxa_Evolutionary_events', prop="evoltype",
+                speciation_color="blue", 
+                duplication_color="red", node_size=3,
+                active=False, legend=True))
             
             layouts = layouts + taxa_layouts
             level += 1

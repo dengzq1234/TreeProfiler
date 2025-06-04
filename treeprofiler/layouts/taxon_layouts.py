@@ -234,3 +234,110 @@ class LayoutSciName(Layout):
                     position="right",                    
                 )
 
+class LayoutEvolEvents(Layout):
+    def __init__(self, name="Evolutionary events", 
+            prop="evoltype",
+            speciation_color="blue", 
+            duplication_color="red", node_size=5,
+            active=True, legend=True):
+
+    
+        self.prop = prop
+        self.speciation_color = speciation_color
+        self.duplication_color = duplication_color
+        self.node_size = node_size
+        self.legend = legend
+        self.active = active
+
+        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+        
+        super().__init__(name=name,
+                         draw_node=self.draw_node,
+                         draw_tree=self.draw_tree,
+                         active=active)
+
+    def draw_tree(self, tree):
+        # Provide collapsed node style
+        yield {"collapsed": self.default_collapsed_style}
+        colormap = { 
+            "Speciation event": self.speciation_color,
+            "Duplication event": self.duplication_color 
+            }
+        yield LegendFace(title=self.name,
+            variable='discrete',
+            colormap=colormap
+            )
+    
+    def draw_node(self, node, collapsed):
+        
+        if not node.is_leaf:
+            if node.props.get(self.prop, "") == "S":
+                style_dot = {
+                    'fill': self.speciation_color,
+                    'radius': self.node_size,
+                }
+            elif node.props.get(self.prop, "") == "D":
+                style_dot = {
+                    'fill': self.duplication_color,
+                    'radius': self.node_size,
+                }
+            else:
+                style_dot = {}
+            yield {
+                'dot': style_dot,
+            }
+
+class TaxaLCA(Layout):
+    def __init__(self, name="LCA", rank=None, color_dict={}, rect_width=20, column=0, padding_x=1, padding_y=0, legend=True, active=True):
+        self.rank = rank
+        self.color_dict = color_dict
+        self.rect_width = rect_width
+        self.column = column
+        self.padding_x = padding_x
+        self.padding_y = padding_y
+        self.active = active
+
+        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+        super().__init__(name=name,
+                         draw_node=self.draw_node,
+                         draw_tree=self.draw_tree,
+                         active=active)
+    
+    def draw_tree(self, tree):
+        # Provide collapsed node style
+        yield {"collapsed": self.default_collapsed_style}
+        if self.color_dict:
+            colormap = self.color_dict
+        else:
+            colormap = {}
+        yield TextFace(
+                " ",
+                fs_min=4,
+                fs_max=25,
+            )
+        yield LegendFace(title='TaxaLCA_'+self.rank,
+            variable='discrete',
+            colormap=colormap
+            )
+    
+    def draw_node(self, node, collapsed):
+        lca_value = node.props.get('lca')
+        if not lca_value:
+            return
+
+        lca_dict = memoized_string_to_dict(lca_value)
+        lca = lca_dict.get(self.rank, None)
+        if not lca:
+            return
+
+        # Draw LCA band since parent is different (or missing)
+        color = self.color_dict.get(lca, 'lightgray')
+        style = {'fill': color}
+        if collapsed:
+            yield TextFace(
+                lca,
+                style=style,
+                fs_min=4,
+                fs_max=25,
+                position="right",                    
+            )

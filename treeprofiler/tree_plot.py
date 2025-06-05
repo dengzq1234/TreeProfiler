@@ -24,7 +24,8 @@ from treeprofiler.tree_image import get_image
 # from treeprofiler.layouts import (
 #     text_layouts, taxon_layouts, staple_layouts, 
 #     conditional_layouts, seq_layouts, profile_layouts, phylosignal_layouts)
-from treeprofiler.layouts import text_layouts, conditional_layouts, taxon_layouts, seq_layouts
+from treeprofiler.layouts import (text_layouts, staple_layouts, conditional_layouts, 
+                                    taxon_layouts, seq_layouts )
 from ete4.smartview import Layout, BASIC_LAYOUT
 
 import treeprofiler.src.utils as utils
@@ -1643,18 +1644,28 @@ def get_branchscore_layouts(tree, props, prop2type, padding_x=1, padding_y=0, in
         index_values = np.linspace(minval, maxval, num)
 
         for search_value in all_values:
+            print(search_value)
             if search_value not in value2color:
                 index = np.abs(index_values - search_value).argmin() + 1
                 value2color[search_value] = gradientscolor[index]
         
         # Get corresponding gradient color on the fly of visualization
+        # layout = staple_layouts.LayoutBranchScore(
+        #     name='BranchScore_' + prop,
+        #     color_dict=value2color,
+        #     prop=prop,
+        #     internal_rep=internal_rep,
+        #     value_range=[minval, maxval],
+        #     color_range=[gradientscolor[num], gradientscolor[num//2], gradientscolor[1]]
+        # )
+        
         layout = staple_layouts.LayoutBranchScore(
             name='BranchScore_' + prop,
             color_dict=value2color,
-            prop=prop,
-            internal_rep=internal_rep,
+            score_prop=prop,
+            internal_rep= internal_rep,
             value_range=[minval, maxval],
-            color_range=[gradientscolor[num], gradientscolor[num//2], gradientscolor[1]]
+            color_range=[gradientscolor[num], gradientscolor[num//2], gradientscolor[1]],
         )
         layouts.append(layout)
 

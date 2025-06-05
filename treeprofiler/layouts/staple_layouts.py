@@ -11,9 +11,17 @@ from ete4.smartview.coordinates import Size, Box, make_box
 
 from ete4 import Tree
 
-
-
 __all__ = [ "LayoutBarplot" ]
+
+# Global default for collapsed nodes
+DEFAULT_COLLAPSED_STYLE = {
+    'shape': 'outline',
+    #'stroke': '#0000FF',
+    #'stroke-width': 1,
+    'fill': '#303030',
+    'opacity': 0.5,
+}
+
 
 def heatmap_gradient(hue, intensity, granularity):
     min_lightness = 0.35 
@@ -66,6 +74,8 @@ class LayoutBranchScore(Layout):
         self.line_width = 3
         self.line_opacity = 0.8
         self.active = active
+        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+
 
         super().__init__(name=name,
                          draw_node=self.draw_node,
@@ -73,6 +83,8 @@ class LayoutBranchScore(Layout):
                          active=active)
     
     def draw_tree(self, tree):
+        # Provide collapsed node style
+        yield {"collapsed": self.default_collapsed_style}
         if self.legend:
             if self.color_dict:
                 yield LegendFace(title=self.name,
@@ -83,11 +95,7 @@ class LayoutBranchScore(Layout):
     
     def _get_color(self, search_value):
         num = len(self.color_dict)
-        
-        index_values = np.linspace(self.value_range[0], self.value_range[1], num)
-        index = np.abs(index_values - search_value).argmin() + 1
-        
-        return self.color_dict.get(index, self.absence_color)
+        return self.color_dict.get(search_value, self.absence_color)
 
     def draw_node(self, node, collapsed):
         # Try to get score from primary prop
@@ -122,3 +130,14 @@ class LayoutBranchScore(Layout):
         }
 
         yield line_style
+
+        if collapsed:
+            yield {
+                "collapsed": {
+                    'shape': 'outline',
+                    'stroke': color,
+                    'stroke-width': self.line_width,
+                    'fill': color,
+                    'opacity': self.line_opacity,
+                }
+            }

@@ -267,3 +267,80 @@ class LayoutBarplot(Layout):
             column=self.column,
             zoomable=False
             )
+
+class LayoutBubble(Layout):
+    def __init__(self, name=None, prop=None, position="aligned", 
+            column=0, bubble_color=None, max_radius=10, abs_maxval=None,
+            padding_x=2, padding_y=0, 
+            scale=True, legend=True, active=True, 
+            internal_rep='avg'):
+        
+        self.name = name
+        self.num_prop = prop
+        self.internal_prop = add_suffix(prop, internal_rep)
+        
+        self.column = column
+        self.position = position
+        self.bubble_color = bubble_color
+        self.positive_color = "red"
+        self.negative_color = "blue"
+        self.internal_rep = internal_rep
+        self.max_radius = float(max_radius)
+        self.abs_maxval = float(abs_maxval)
+        self.opacity = 0.8
+        self.padding_x = padding_x
+        self.padding_y = padding_y
+        
+        self.legend = legend
+        self.active = active
+        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+
+        super().__init__(name=name,
+                         draw_node=self.draw_node,
+                         draw_tree=self.draw_tree,
+                         active=active)
+
+    def draw_tree(self, tree):
+        # Provide collapsed node style
+        yield {"collapsed": self.default_collapsed_style}
+        # if self.legend:
+        #     yield LegendFace(title=self.name,
+        #         variable='discrete',
+        #         colormap={
+        #             self.num_prop:  self.color
+        #         },
+        #         )
+    
+    def _get_bubble_size(self, search_value):
+        search_value = abs(float(search_value))
+        bubble_size = search_value / self.abs_maxval * self.max_radius
+        return bubble_size
+
+    def draw_node(self, node, collapsed):
+        # Try to get the primary value
+        number = node.props.get(self.num_prop)
+
+        # Fallback to internal_prop if number is None and it's a leaf or internal with that prop
+        if number is None and node.props.get(self.internal_prop):
+            number = node.props.get(self.internal_prop)
+
+        # If we have a valid number, apply style
+        if number is not None:
+            bubble_size = self._get_bubble_size(number)
+            #bubble_color = self.positive_color if number > 0 else self.negative_color
+            self.bubble_color
+
+            style_dot = {
+                    'fill': self.bubble_color,
+                    'radius': bubble_size,
+                    'opacity': self.opacity,      
+                }
+            
+            yield {
+                'dot': style_dot,
+            }
+
+            if collapsed:
+                yield {
+                    'dot': style_dot,
+                }

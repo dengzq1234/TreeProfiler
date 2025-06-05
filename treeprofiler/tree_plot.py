@@ -1879,13 +1879,18 @@ def get_numerical_bubble_layouts(tree, props, level, prop2type, padding_x=0, pad
                 # Assign the color from the gradient
                 value2color[val] = gradientscolor[color_index+1]
         num = len(gradientscolor)
+
+        bubble_color = paired_color[level]
         # Configure and add layout
-        layout = staple_layouts.LayoutBubbleNumerical(name=f'Numerical-Bubble_{prop}', 
-        column=level, prop=prop, max_radius=max_radius, abs_maxval=abs_maxval, 
-        padding_x=padding_x, padding_y=padding_y, value2color=value2color, 
-        bubble_range=bubble_range, 
-        color_range=[gradientscolor[num], gradientscolor[num//2], gradientscolor[1]],
-        internal_rep=internal_rep)
+        layout = staple_layouts.LayoutBubble(name=f'Numerical-Bubble_{prop}', 
+        column=level, prop=prop, bubble_color=bubble_color,
+        max_radius=max_radius, abs_maxval=abs_maxval, 
+        padding_x=padding_x, padding_y=padding_y, 
+        internal_rep=internal_rep
+        #value2color=value2color, 
+        #bubble_range=bubble_range, 
+        #color_range=[gradientscolor[num], gradientscolor[num//2], gradientscolor[1]],
+        )
 
         layouts.append(layout)
         level += 1

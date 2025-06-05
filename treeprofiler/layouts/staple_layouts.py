@@ -141,3 +141,62 @@ class LayoutBranchScore(Layout):
                     'opacity': self.line_opacity,
                 }
             }
+
+class BarPlotLayout:
+    def __init__(self, 
+    name="Branch Length Barplot", prop="dist", fill_color="blue", 
+    column=0, width=200, size_range=[0,1]):
+        self.name = name
+        self.fill_color = fill_color
+        self.column = column
+        self.width = width
+        
+        #self.scale = scale
+        self.active = True
+        self.size_range = [0, 1]
+
+    def get_size(self, node):
+        minval, maxval = self.size_range
+        return float(node.props.get(prop, 0)) / maxval * self.width
+
+    def draw_node(self, node, collapsed=False):
+        if node.is_leaf:
+            bar_width = self.get_size(node)
+            #yield LineFace(wmax=bar_width, style={'stroke': 'black', 'stroke-width': 2}, position='aligned', column=self.column+1)
+            yield RectFace(wmax=bar_width, style={'fill': self.fill_color}, position='aligned', column=self.column)
+
+    def draw_tree(self, tree):
+        max_width = self.size_range[1] * self.width
+        yield TextFace(self.name, rotation=-45, position='header', column=self.column)
+        #yield LineFace(wmax=max_width, style={'stroke': 'black', 'stroke-width': 2}, position='header', column=self.column)
+        
+class LayoutBarplot(Layout):
+    def __init__(self, name="Barplot", prop=None, width=200, color_prop=None, 
+        fill_color="red", column=0, width=800,size_range=[], 
+        internal_rep='avg', scale=True, legend=True, active=True):
+
+        self.name = name
+        self.prop = prop
+        self.width = width
+        self.color_prop = color_prop
+        self.fill_color = fill_color
+        self.column = column
+        self.width = width
+        self.size_range = size_range    
+        if internal_rep:
+            self.internal_prop = add_suffix(prop, internal_rep)
+        else:
+            self.internal_prop = None
+
+        self.active = active
+        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+
+
+        super().__init__(name=name,
+                         draw_node=self.draw_node,
+                         draw_tree=self.draw_tree,
+                         active=active)
+    
+    def draw_tree(self, tree):
+        max_width = self.size_range[1] * self.width
+        yield TextFace(self.name, rotation=-45, position='header', column=self.column)

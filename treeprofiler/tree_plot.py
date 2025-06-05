@@ -872,7 +872,7 @@ def run(args):
                 
                 if args.taxoncollapse_layout:
                     taxa_layout = Layout(name=f'TaxaCollapse_{rank}',
-                        draw_tree=taxon_layouts.collapsed_by_rank(rank),
+                        draw_tree=taxon_layouts.make_draw_tree_collapse(rank, color_dict),
                         draw_node=taxon_layouts.draw_collapsed_node(rank, color_dict, band_width, level),
                         active=False,
                     )
@@ -880,7 +880,7 @@ def run(args):
                     taxa_layouts.append(taxa_layout)
 
                 if args.taxonrectangle_layout:
-                    
+
                     taxa_layout = taxon_layouts.TaxaRectangular(name='TaxaRect_'+rank, rect_width=band_width, rank=rank, color_dict=color_dict, column=level, active=active)
                     taxa_layouts.append(taxa_layout)
                 

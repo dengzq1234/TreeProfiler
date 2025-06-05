@@ -239,10 +239,18 @@ def make_is_leaf_fn(collapse_rank):
 
     return is_leaf_fn
 
-def collapsed_by_rank(rank):
-    style = DEFAULT_TREE_STYLE.copy() # otherwise it will be modified in place
-    style['is-leaf-fn'] = make_is_leaf_fn(rank)
-    return style
+def make_draw_tree_collapse(rank, color_dict):
+    def draw_tree(tree):
+        style = DEFAULT_TREE_STYLE.copy() # otherwise it will be modified in place
+        style['is-leaf-fn'] = make_is_leaf_fn(rank)
+        yield style
+        if color_dict:
+            yield LegendFace(title='TaxaCollapse_'+rank,
+                    variable='discrete',
+                    colormap=color_dict,
+                    )
+        
+    return draw_tree
 
 def draw_collapsed_node(rank, color_dict, rect_width=20, column=0):
     def draw_node(node, collapsed):

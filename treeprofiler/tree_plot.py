@@ -1644,20 +1644,9 @@ def get_branchscore_layouts(tree, props, prop2type, padding_x=1, padding_y=0, in
         index_values = np.linspace(minval, maxval, num)
 
         for search_value in all_values:
-            print(search_value)
             if search_value not in value2color:
                 index = np.abs(index_values - search_value).argmin() + 1
-                value2color[search_value] = gradientscolor[index]
-        
-        # Get corresponding gradient color on the fly of visualization
-        # layout = staple_layouts.LayoutBranchScore(
-        #     name='BranchScore_' + prop,
-        #     color_dict=value2color,
-        #     prop=prop,
-        #     internal_rep=internal_rep,
-        #     value_range=[minval, maxval],
-        #     color_range=[gradientscolor[num], gradientscolor[num//2], gradientscolor[1]]
-        # )
+                value2color[float(search_value)] = gradientscolor[index]
         
         layout = staple_layouts.LayoutBranchScore(
             name='BranchScore_' + prop,

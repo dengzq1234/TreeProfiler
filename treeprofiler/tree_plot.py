@@ -717,9 +717,12 @@ def run(args):
             else:
                 window = []
 
-            aln_layout = seq_layouts.LayoutAlignment(name='Alignment', 
-                        alignment_prop='alignment', column=level, scale_range=lengh, 
-                        window=window, summarize_inner_nodes=True)
+            # aln_layout = seq_layouts.LayoutAlignment(name='Alignment', 
+            #             alignment_prop='alignment', column=level, scale_range=lengh, 
+            #             window=window, summarize_inner_nodes=True)
+            aln_layout = Layout(name='Alignment',
+                        draw_node=seq_layouts.layout_seqface_draw_node('alignment')
+                        )
             layouts.append(aln_layout)
 
         if layout == 'domain-layout':

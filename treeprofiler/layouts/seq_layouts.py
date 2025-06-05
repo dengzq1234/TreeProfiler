@@ -1,14 +1,17 @@
 
-from ete4 import SeqGroup
-from ete4.smartview import TreeLayout
-from ete4.smartview import AlignmentFace, SeqMotifFace, Face
-from ete4.smartview.renderer import draw_helpers
-from ete4.smartview.renderer.draw_helpers import draw_line, draw_text, Box
+from ete4.smartview.faces import Face
+import ete4.smartview.graphics as gr
+from ete4.smartview.coordinates import Size, Box, make_box
 
-#from utils import get_consensus_seq
+from ete4 import Tree
+from ete4.smartview import Layout, BASIC_LAYOUT, SeqFace
+
 from pathlib import Path
 from io import StringIO
 import json
+import re
+
+
 
 
 __all__ = [ "LayoutAlignment" ]
@@ -19,241 +22,327 @@ def get_colormap():
         _pfam2color = json.load(handle)
     return _pfam2color
 
-class LayoutAlignment(TreeLayout):
-    def __init__(self, name="Alignment",
-            alignment=None, alignment_prop=None, format='seq', width=700, height=15,
-            column=0, scale_range=None, window=[], summarize_inner_nodes=True, 
-            aligned_faces=True):
-        super().__init__(name, aligned_faces=aligned_faces)
-        #self.alignment = SeqGroup(alignment) if alignment else None
-        self.alignment_prop = alignment_prop
-        self.width = width
-        self.height = height
-        self.column = column
-        self.aligned_faces = True
-        self.format = format
+class SeqMotifFaceNew(Face):
+    """A face for visualizing sequence motifs as rounded rectangles with connecting lines."""
 
-        #self.length = len(next(self.alignment.iter_entries())[1]) if self.alignment else None
-        self.scale_range = (0, scale_range) or (0, self.length)
-        self.window = window
-        self.summarize_inner_nodes = summarize_inner_nodes
-
-    def set_tree_style(self, tree, tree_style):
-        if self.scale_range:
-            if self.window:
-                face = ScaleFace(width=self.width, scale_range=self.window, padding_y=10)
-                tree_style.aligned_panel_header.add_face(face, column=self.column)
-            else:
-                face = ScaleFace(width=self.width, scale_range=self.scale_range, padding_y=10)
-                tree_style.aligned_panel_header.add_face(face, column=self.column)
-    
-    def get_seq(self, node, window=[]):
-        seq = node.props.get(self.alignment_prop, None)
-        return seq
-
-    def set_node_style(self, node):
-        seq = self.get_seq(node)
-        if seq:
-            seq = str(seq) # convert Bio.seq.seq to string seq
-            if self.window:
-                start, end = self.window
-                seq = seq[start:end]
-            seqFace = AlignmentFace(seq, seq_format=self.format, bgcolor='grey',
-                    width=self.width, height=self.height)
-            node.add_face(seqFace, column=self.column, position='aligned',
-                    collapsed_only=(not node.is_leaf)) 
-
-
-def get_alnface(seq_prop, level):
-    def layout_fn(node):
-        if node.is_leaf:
-            seq = node.props.get(seq_prop)
-            seq_face = AlignmentFace(seq, seqtype='aa',
-            gap_format='line', seq_format='[]',
-            width=None, height=None, # max height
-            fgcolor='black', bgcolor='#bcc3d0', gapcolor='gray',
-            gap_linewidth=0.2,
-            max_fsize=12, ftype='sans-serif',
-            padding_x=0, padding_y=0)
-            node.add_face(seq_face, position="aligned", column=level)
-    return layout_fn
-
-class LayoutDomain(TreeLayout):
-    def __init__(self, prop, name,
-            column=10, colormap={},
-            min_fsize=4, max_fsize=15,
-            padding_x=5, padding_y=0):
-        super().__init__(name or "Domains layout")
-        self.prop = prop
-        self.column = column
-        self.aligned_faces = True
-        self.min_fsize = min_fsize
+    def __init__(self, rects, len_alg=None, wmax=1800, hmax=30, 
+                seq_format='()', box_corner_radius=10, 
+                box_opacity=0.7, box_storke_width=0.1,
+                fgcolor='black', bgcolor='#bcc3d0', 
+                gap_color='grey', gap_linewidth=0.5,
+                font_color='black', max_fsize=12, ftype='sans-serif',
+                position='aligned', column=0, anchor=None):
+        """
+        :param rects: List of motif regions, each defined as (start, end, color, label).
+        :param wmax: Total width of the sequence visualization.
+        :param hmax: Height of the motif boxes.
+        :param corner_radius: Radius for rounded corners.
+        :param gap_color: Color of the connecting lines.
+        :param gap_linewidth: Width of the connecting lines.
+        :param position: Position of the face in the layout.
+        :param column: Column index for alignment.
+        :param anchor: Alignment anchor.
+        """
+        super().__init__(position, column, anchor)
+        self.rects = rects
+        self.len_alg = len_alg
+        self.wmax = wmax
+        self.hmax = hmax
+        self.seq_format = seq_format
+        self.box_corner_radius = box_corner_radius
+        self.box_opacity = 0.7
+        self.box_storke_width = 0.1
+        self.fgcolor = fgcolor
+        self.bgcolor = bgcolor
+        self.gap_color = gap_color
+        self.gap_linewidth = gap_linewidth
+        self.font_color = font_color
         self.max_fsize = max_fsize
-        self.padding = draw_helpers.Padding(padding_x, padding_y)
-        if not colormap:
-            self.colormap = get_colormap()
-        else:
-            self.colormap = colormap
-
-    def get_doms(self, node):
-        pair_delimiter = "@"
-        item_seperator = "||"
-        dom_list = []
-        if node:
-            dom_prop = node.props.get(self.prop, [])
-            if dom_prop:
-                
-                dom_list = [dom.split(pair_delimiter) for dom in dom_prop.split(item_seperator)]
-                #print(dom_list)
-                return dom_list
-            #return node.props.get(self.prop, [])
-        # else:
-        #     first_node = next(node.leaves())
-        #     print("here", first_node.props.get(self.prop, []))
-        #     return first_node.props.get(self.prop, [])
-
-    def parse_doms(self, dom_list):
-        doms = []
-        for name, start, end in dom_list:
-            color = self.colormap.get(name, "lightgray")
-            dom = [int(start), int(end), "()", 
-                   None, None, color, color,
-                   "arial|30|black|%s" %(name)]
-            doms.append(dom)
-        return doms
-
-    def set_node_style(self, node):
-        dom_list = self.get_doms(node)
-        if dom_list:
-            doms = self.parse_doms(dom_list)
-            fake_seq = '-' * int(node.props.get("len_alg", 0))
-            
-            if doms or fake_seq:
-                seqFace = SeqMotifFace(seq=fake_seq, motifs=doms, width=400,
-                        height=30)
-                node.add_face(seqFace, column=self.column, 
-                        position="aligned",
-                        collapsed_only=(not node.is_leaf))
-        else:
-            print("no domain found for node %s" % node.name)
-
-class ScaleFace(Face):
-    def __init__(self, name='', width=None, color='black',
-            scale_range=(0, 0), tick_width=80, line_width=1,
-            formatter='%.0f',
-            min_fsize=6, max_fsize=12, ftype='sans-serif',
-            padding_x=0, padding_y=0):
-
-        Face.__init__(self, name=name,
-                padding_x=padding_x, padding_y=padding_y)
-
-        self.width = width
-        self.height = None
-        self.range = scale_range
-
-        self.color = color
-        self.min_fsize = min_fsize
-        self.max_fsize = max_fsize
-        self._fsize = max_fsize
         self.ftype = ftype
-        self.formatter = formatter
+        
+        #self.triangles = {'^': 'top', '>': 'right', 'v': 'bottom', '<': 'left'}
 
-        self.tick_width = tick_width
-        self.line_width = line_width
+        #self.gaps = self._compute_gaps(rects, wmax)
 
-        self.vt_line_height = 10
+    def _compute_gaps(self, rects, seq_start, seq_end):
+        """Compute the gaps (empty spaces between domain)."""
+        gaps = []
+        prev_end = seq_start
 
-    def __name__(self):
-        return "ScaleFace"
+        for start_x, end_x, _, _, _, _, _, _ in rects:
+            if start_x > prev_end:
+                gaps.append((prev_end, start_x))
+            prev_end = end_x
 
-    def compute_bounding_box(self,
-            drawer,
-            point, size,
-            dx_to_closest_child,
-            bdx, bdy,
-            bdy0, bdy1,
-            pos, row,
-            n_row, n_col,
-            dx_before, dy_before):
+        if prev_end < seq_end:
+            gaps.append((prev_end, seq_end))
 
-        if drawer.TYPE == 'circ' and abs(point[1]) >= pi/2:
-            pos = swap_pos(pos)
+        return gaps
 
-        box = super().compute_bounding_box(
-            drawer,
-            point, size,
-            dx_to_closest_child,
-            bdx, bdy,
-            bdy0, bdy1,
-            pos, row,
-            n_row, n_col,
-            dx_before, dy_before)
+    def draw(self, nodes, size, collapsed, zoom=(1, 1), ax_ay=(0, 0), r=1):
+        dx, dy = size
+        zx, zy = zoom
+        
+        # Compute width and height with respect to zoom 
+        if dx <= 0:
+            w = self.wmax
+        
+        h = min(zy * r * dy, self.hmax) if dy > 0 else self.hmax
+        
+        graphics = []
 
-        x, y, _, dy = box
-        zx, zy = self.zoom
+        # Normalize per-node sequence range
+        # Sort rects by start
+        sorted_rects = sorted(self.rects, key=lambda x: x[0])
+        if not sorted_rects:
+            return graphics, Size(w, h / (r * zy))
 
-        self.viewport = (drawer.viewport.x, drawer.viewport.x + drawer.viewport.dx)
+        
+        #seq_start = min(start for start, _, _, _, _, _, _, _ in sorted_rects)
+        seq_start = 0
+        max_domain_end = max(end for _, end, *_ in sorted_rects)
+        seq_end = max(max_domain_end, self.len_alg or w)
+        
+        seq_length = seq_end - seq_start
+        
+        if seq_length == 0:
+            seq_length = 1  # avoid division by zero
 
-        self.height = (self.line_width + 10 + self.max_fsize) / zy
+        scale = w / seq_length
 
-        height = min(dy, self.height)
-
-        if pos == "aligned_bottom":
-            y = y + dy - height
-
-        self._box = Box(x, y, self.width / zx, height)
-        return self._box
-
-    def draw(self, drawer):
-        x0, y, _, dy = self._box
-        zx, zy = self.zoom
-
-        p1 = (x0, y + dy - 5 / zy)
-        p2 = (x0 + self.width, y + dy - self.vt_line_height / (2 * zy))
-        if drawer.TYPE == 'circ':
-            p1 = cartesian(p1)
-            p2 = cartesian(p2)
-        yield draw_line(p1, p2, style={'stroke-width': self.line_width,
-                                       'stroke': self.color})
-
-
-        nticks = round((self.width * zx) / self.tick_width)
-        dx = self.width / nticks
-        range_factor = (self.range[1] - self.range[0]) / self.width
-
-        if self.viewport:
-            sm_start = round(max(self.viewport[0] - self.viewport_margin - x0, 0) / dx)
-            sm_end = nticks - round(max(x0 + self.width - (self.viewport[1] +
-                self.viewport_margin), 0) / dx)
-        else:
-            sm_start, sm_end = 0, nticks
-
-        for i in range(sm_start, sm_end + 1):
-            x = x0 + i * dx
-            number = range_factor * i * dx + self.range[0]
+        # Compute gaps per draw call
+        gaps = self._compute_gaps(sorted_rects, seq_start, seq_end)
+        
+        # Draw connecting lines in the gaps
+        for gap_start, gap_end in gaps:
             
-            if number == 0:
-                text = "0"
+            gap_width = (gap_end - gap_start) * scale
+
+            if gap_width > 0:
+                size_obj = Size(gap_width, h / (r * zy))
+                line_height = h / (r * zy) / 2
+                box = make_box(((gap_start - seq_start) * scale, line_height), size_obj)
+                style = {
+                    'stroke': self.gap_color, 
+                    'stroke-width': self.gap_linewidth
+                    }
+                graphics.append(gr.draw_line((box.x, box.y), (box.x + box.dx, box.y), style))
+
+        # Draw rectangles
+        for start_x, end_x, seq_format, poswidth, heigh, fgcolor, bgcolor, label in sorted_rects:
+            
+            # config size for rect
+            if poswidth:
+                rect_width = float(poswidth) * scale
             else:
-                text = self.formatter % number if self.formatter else str(number)
+                rect_width = (end_x - start_x) * scale
 
-            text = text.rstrip('0').rstrip('.') if '.' in text else text
+            # config height for rect
+            if heigh:
+                h = float(heigh)
+            
+            box_x = (start_x - seq_start) * scale
+            size_obj = Size(rect_width, h / (r * zy))
+            box = make_box((box_x, 0), size_obj)
+            
+            if seq_format:
+                if seq_format == '()':
+                    box_corner_radius = 10
+                elif seq_format == '[]':
+                    box_corner_radius = 0
+            else:
+                seq_format = self.seq_format
+                box_corner_radius = self.box_corner_radius
+            
+            graphics.append(gr.draw_rect(box, {
+                'fill': fgcolor,
+                'opacity': self.box_opacity,
+                'stroke': bgcolor,
+                'stroke-width': self.box_storke_width,
+                'rx': box_corner_radius,
+                'ry': box_corner_radius
+            }))
 
-            self.compute_fsize(self.tick_width / len(text), dy, zx, zy)
-            text_style = {
-                'max_fsize': self._fsize,
-                'text_anchor': 'middle',
-                'ftype': f'{self.ftype}, sans-serif', # default sans-serif
-                }
-            text_box = Box(x,
-                    y,
-                    # y + (dy - self._fsize / (zy * r)) / 2,
-                    dx, dy)
+            # Check if label fits
+            if label:
+                try:
+                    ftype, fsize, fcolor, text = label.split("|")
+                    fsize = int(fsize)
+                except:
+                    ftype = self.ftype
+                    fsize = self.max_fsize
+                    fcolor = self.font_color
+                    text = label
 
-            yield draw_text(text_box, text, style=text_style)
+                text_style = {
+                    'fill': fcolor, 
+                    'font-family': ftype,
+                    'text-anchor': 'middle',
+                    }
+                text_element = gr.draw_text(box, (0.5, 0.5), text, fs_max=fsize, rotation=0, style=text_style)
+                graphics.append(text_element)
 
-            p1 = (x, y + dy - self.vt_line_height / zy)
-            p2 = (x, y + dy)
+        return graphics, Size(w, h / (r * zy))
 
-            yield draw_line(p1, p2, style={'stroke-width': self.line_width,
-                                           'stroke': self.color})
+class AlgFace(Face):
+    """A face for visualizing sequence alignments in grey blocks instead of every aa."""
+
+    def __init__(self, seq, width=400, seqtype='aa', draw_text=True,
+                 hmax=10, fs_max=15, style='', render='auto', compact_seq=True,
+                 compact_cutoff=0.5, position='top', column=0, anchor=None):
+        super().__init__(position, column, anchor)
+        self.seq = ''.join(seq)  # ensure flat string
+        self.seqtype = seqtype
+        self.draw_text = draw_text
+        self.fs_max = fs_max
+        self.hmax = hmax
+        self.style = style
+        self.render = render
+        self.seqlength = len(self.seq)
+        self.width = width
+        self.poswidth = self.width / self.seqlength
+        self.line_color = 'black'
+        self.line_width = 0.5
+        self.block_color = '#222222'
+        self.block_opacity = 0.5
+        self.blocks = self._build_blocks()
+        self.compact_seq = compact_seq
+        self.compact_cutoff = 1
+        
+    def _build_blocks(self):
+        """Identify contiguous regions without gaps."""
+        blocks = []
+        pos = 0
+        for segment in re.split('([^-]+)', self.seq):
+            if segment and not segment.startswith("-"):
+                blocks.append((pos, pos + len(segment)))
+            pos += len(segment)
+        return blocks
+
+
+    def _compute_gaps(self, seq_start, seq_end):
+        """Compute the gaps (empty spaces between domain)."""
+        gaps = []
+        prev_end = seq_start
+
+        for start_x, end_x in self.blocks:
+            if start_x > prev_end:
+                gaps.append((prev_end, start_x))
+            prev_end = end_x
+
+        if prev_end < seq_end:
+            gaps.append((prev_end, seq_end))
+
+        return gaps    
+
+    def draw(self, nodes, size, collapsed, zoom=(1, 1), ax_ay=(0, 0), r=1):
+        dx, dy = size
+        zx, zy = zoom
+        
+        if dx <= 0:  # no limit on dx? make it as big as possible
+            dx = self.poswidth * self.seqlength 
+
+        # Compute width and height with respect to zoom
+        w = dx
+        h = min(zy * r * dy, self.hmax) if dy > 0 else self.hmax
+        
+        avg_pixel_per_residue = dx / self.seqlength
+        too_small = (w * zx) / self.seqlength < self.compact_cutoff
+        use_blocks = self.compact_seq or too_small
+
+        graphics = []
+        scale = w / self.seqlength
+
+        if use_blocks:
+            seq_start, seq_end = 0, self.seqlength
+            gaps = self._compute_gaps(seq_start, seq_end)
+            sorted_blocks = sorted(self.blocks, key=lambda x: x[0])
+
+            # Draw connecting lines
+            for gap_start, gap_end in gaps:
+                gap_width = (gap_end - gap_start) * scale
+                if gap_width <= 0:
+                    continue
+
+                y_coord = h / (r * zy) / 2
+                size_obj = Size(gap_width, y_coord)
+                box = make_box((gap_start * scale, y_coord), size_obj)
+
+                style = {'stroke': self.line_color, 'stroke-width': self.line_width}
+                graphics.append(gr.draw_line((box.x, box.y), (box.x + box.dx, box.y), style))
+
+            # Draw blocks
+            for start, end in sorted_blocks:
+                start_px = start * scale
+                end_px = end * scale
+                size_obj = Size(end_px - start_px, h / (r * zy))
+                box = make_box((start_px, 0), size_obj)
+
+                graphics.append(gr.draw_rect(box, {
+                    'fill': self.block_color,
+                    'opacity': self.block_opacity,
+                    'rx': 5,
+                    'ry': 5
+                }))
+        else:
+            # Full sequence drawing
+            if dy <= 0:
+                assert self.hmax is not None, 'hmax needed if dy <= 0'
+                dy = self.hmax / zy
+            elif self.hmax is not None:
+                dy = min(dy, self.hmax / zy)
+
+            size_obj = Size(dx, dy)
+            box = make_box((0, 0), size_obj)
+
+            graphics.append(gr.draw_seq(box, self.seq, self.seqtype, self.draw_text,
+                                        self.fs_max, self.style, self.render))
+
+        return graphics, size_obj
+
+def create_pfam(tree, len_alg=None):
+    def parse_dom_arq_string(dom_arq_string):
+        rects = []
+        if not dom_arq_string:
+            return rects
+        for dom_arq in dom_arq_string.split("||"):
+            parts = dom_arq.split("@")
+            if len(parts) == 3:
+                domain_name, start, end = parts
+                color = colormap.get(domain_name, "lightgray")
+                rects.append([
+                    int(start), int(end), 
+                    "()", None, None, color, color, 
+                    f"arial|15|black|{domain_name}"
+                ])
+        return rects
+
+    # Get the maximum sequence length end from all nodes
+    if len_alg is None:
+        for node in tree.traverse():
+            rects = parse_dom_arq_string(node.props.get("dom_arq", None))
+            for r in rects:
+                if len(r) >= 2:
+                    len_alg = max(len_alg, r[1])
+    
+    def draw_node(node, collapsed):
+        rects = parse_dom_arq_string(node.props.get("dom_arq", None))
+        if rects:
+            if collapsed:
+                yield SeqMotifFaceNew(rects, len_alg=len_alg)
+            elif node.is_leaf:
+                yield SeqMotifFaceNew(rects, len_alg=len_alg)
+
+    return draw_node
+
+def layout_seqface_draw_node(alignment_prop, width=1000, column=0, scale_range=None,, window=[], summarize_inner_nodes=True):
+    def draw_node(node, collapse):
+        if node.is_leaf:
+            yield AlgFace(
+                node.props.get(alignment_prop),
+                render='svg', 
+                width=width, 
+                position='aligned',
+                column=column)
+    
+    return draw_node

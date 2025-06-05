@@ -200,27 +200,39 @@ class LayoutBarplot(Layout):
     def draw_tree(self, tree):
         max_width = self.size_range[1] * self.width
         yield TextFace(self.name, rotation=-45, position='header', column=self.column)
+        # Provide collapsed node style
+        yield {"collapsed": self.default_collapsed_style}
 
-    def get_size(self, node):
+        yield LegendFace(title=self.name,
+            variable='discrete',
+            colormap={
+                self.prop:  self.fill_color
+            },
+            )
+    def get_size(self, value):
         minval, maxval = self.size_range
-        return float(node.props.get(self.prop, 0)) / maxval * self.width
+        
+        if value:
+            return value / maxval * self.width
+        else:
+            return 0
     
     def draw_node(self, node, collapsed):
 
         # Determine which property to use
-        value = None
+        prop = None
         if node.props.get(self.prop) is not None and node.is_leaf:
-            value = self.prop
+            prop = self.prop
         elif node.is_leaf and node.props.get(self.internal_prop) is not None:
-            value = self.internal_prop
+            prop = self.internal_prop
         elif node.props.get(self.internal_prop) is not None:
-            value = self.internal_prop
+            prop = self.internal_prop
         else:
             return  # No valid property found, exit early
-
+        value = node.props.get(prop)
         # Extract visual parameters
-        bar_width = self.get_size(node)
-        #color = self.get_color(node, self.color_prop, self.colors)
+        bar_width = self.get_size(value)
+
 
         # Construct tooltip
         # tooltip = ""
@@ -232,6 +244,26 @@ class LayoutBarplot(Layout):
         #     tooltip += f'<br>{self.color_prop}: {color}<br>'
 
         # Create and add face
-        yield RectFace(wmax=bar_width, style={'fill': self.fill_color}, position='aligned', column=self.column)
-        # if collapsed:
-        #     yield RectFace(wmax=bar_width, style={'fill': self.fill_color}, position='aligned', column=self.column)
+
+        if node.is_leaf:
+            yield BoxFace(wmax=bar_width,
+            style={
+                'fill': self.fill_color,
+                "stroke-width": 1,
+                "stroke": "white",
+                }, 
+            position='aligned', 
+            column=self.column,
+            zoomable=False
+            )
+        if collapsed:
+            yield BoxFace(wmax=bar_width,
+            style={
+                'fill': self.fill_color,
+                "stroke-width": 1,
+                "stroke": "white",
+                }, 
+            position='aligned', 
+            column=self.column,
+            zoomable=False
+            )

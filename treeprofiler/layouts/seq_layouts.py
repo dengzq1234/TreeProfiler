@@ -335,7 +335,7 @@ def create_pfam(tree, len_alg=None):
 
     return draw_node
 
-def layout_seqface_draw_node(alignment_prop, width=1000, column=0, scale_range=None,, window=[], summarize_inner_nodes=True):
+def layout_seqface_draw_node(alignment_prop, width=1000, column=0, scale_range=None, window=[], summarize_inner_nodes=True):
     def draw_node(node, collapse):
         if node.is_leaf:
             yield AlgFace(

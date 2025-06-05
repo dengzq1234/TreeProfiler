@@ -1692,21 +1692,22 @@ def get_barplot_layouts(tree, props, level, prop2type, column_width=70, padding_
             'name': f'Barplot_{prop}',
             'prop': prop,
             'width': new_column_width,
-            'color': None if color_dict else barplot_color, # single color for all barplot
-            'colors': color_dict, # color dict for each value based on barplot_colorby
-            'color_prop': color_prop, # barplot_colorby prop
-            'size_prop': size_prop,
+            'fill_color': None if color_dict else barplot_color, # single color for all barplot
+            #'colors': color_dict, # color dict for each value based on barplot_colorby
+            #'color_prop': color_prop, # barplot_colorby prop
+            #'size_prop': size_prop,
             'column': level,
             'internal_rep': internal_rep,
-            'padding_x': padding_x * 10,
+            #'padding_x': padding_x * 10,
             'size_range': size_range,
         }
 
-        if color_dict is None:
-            del layout_params['colors']
-            del layout_params['color_prop']
-        else:
-            del layout_params['color']
+
+        # if color_dict is None:
+        #     del layout_params['colors']
+        #     del layout_params['color_prop']
+        # else:
+        #     del layout_params['color']
         return staple_layouts.LayoutBarplot(**layout_params)
 
     prop_color_dict = {}

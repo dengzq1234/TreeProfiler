@@ -300,7 +300,8 @@ class AlgFace(Face):
 
         return graphics, size_obj
 
-def create_pfam(tree, len_alg=None):
+def create_pfam(tree, len_alg=None, width=1000, column=0):
+    colormap = get_colormap()
     def parse_dom_arq_string(dom_arq_string):
         rects = []
         if not dom_arq_string:
@@ -320,29 +321,54 @@ def create_pfam(tree, len_alg=None):
     # Get the maximum sequence length end from all nodes
     if len_alg is None:
         for node in tree.traverse():
+            # Try to get len_alg directly
+            val = node.props.get("len_alg", None)
+            if val is not None:
+                len_alg = int(val)
+                break
+
+            # Try to compute from dom_arq
             rects = parse_dom_arq_string(node.props.get("dom_arq", None))
             for r in rects:
                 if len(r) >= 2:
-                    len_alg = max(len_alg, r[1])
-    
+                    len_alg = r[1]
+                    break
+
+            if len_alg is not None:
+                break
+            
     def draw_node(node, collapsed):
         rects = parse_dom_arq_string(node.props.get("dom_arq", None))
         if rects:
             if collapsed:
-                yield SeqMotifFaceNew(rects, len_alg=len_alg)
+                yield SeqMotifFaceNew(rects, len_alg=len_alg, wmax=width, column=column)
             elif node.is_leaf:
-                yield SeqMotifFaceNew(rects, len_alg=len_alg)
+                yield SeqMotifFaceNew(rects, len_alg=len_alg, wmax=width, column=column)
 
     return draw_node
 
 def layout_seqface_draw_node(alignment_prop, width=1000, column=0, scale_range=None, window=[], summarize_inner_nodes=True):
     def draw_node(node, collapse):
-        if node.is_leaf:
-            yield AlgFace(
-                node.props.get(alignment_prop),
-                render='svg', 
-                width=width, 
-                position='aligned',
-                column=column)
-    
+        seq = node.props.get(alignment_prop)
+        if seq:
+            if window:
+                start, end = window
+                seq = seq[int(start):int(end)]
+            if node.is_leaf:
+                yield AlgFace(
+                    seq,
+                    render='svg', 
+                    width=width, 
+                    position='aligned',
+                    column=column,
+                    compact_seq=False)
+            if summarize_inner_nodes:
+                if collapse:
+                    yield AlgFace(
+                    seq,
+                    render='svg', 
+                    width=width, 
+                    position='aligned',
+                    column=column,
+                    compact_seq=False)
     return draw_node

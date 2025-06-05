@@ -24,7 +24,7 @@ from treeprofiler.tree_image import get_image
 # from treeprofiler.layouts import (
 #     text_layouts, taxon_layouts, staple_layouts, 
 #     conditional_layouts, seq_layouts, profile_layouts, phylosignal_layouts)
-from treeprofiler.layouts import text_layouts, conditional_layouts, taxon_layouts
+from treeprofiler.layouts import text_layouts, conditional_layouts, taxon_layouts, seq_layouts
 from ete4.smartview import Layout, BASIC_LAYOUT
 
 import treeprofiler.src.utils as utils
@@ -729,15 +729,21 @@ def run(args):
             else:
                 window = []
 
-            width = args.alignment_width 
-            aln_layout = seq_layouts.LayoutAlignment(name='Alignment', 
-                        alignment_prop='alignment', column=level, scale_range=lengh, 
-                        window=window, width=width, summarize_inner_nodes=True)
+            width = int(args.alignment_width) 
+            aln_layout = Layout(name='Alignment',
+                        draw_node=seq_layouts.layout_seqface_draw_node('alignment', 
+                        width=width, column=level, scale_range=lengh, window=window,
+                        summarize_inner_nodes=True
+                        )
+                )
             layouts.append(aln_layout)
 
         if layout == 'domain-layout':
             width = args.alignment_width 
-            domain_layout = seq_layouts.LayoutDomain(name="Domain", prop='dom_arq', width=width)
+            #domain_layout = seq_layouts.LayoutDomain(name="Domain", prop='dom_arq', width=width)
+            domain_layout = Layout(name='Domain',
+                    draw_node=seq_layouts.create_pfam(tree, width=width, column=level)
+            )
             layouts.append(domain_layout)
         
         # presence-absence profiling based on categorical data

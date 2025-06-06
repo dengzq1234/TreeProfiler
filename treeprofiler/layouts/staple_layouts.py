@@ -85,6 +85,7 @@ class LayoutBranchScore(Layout):
     def draw_tree(self, tree):
         # Provide collapsed node style
         yield {"collapsed": self.default_collapsed_style}
+        
         if self.legend:
             if self.color_dict:
                 yield LegendFace(title=self.name,
@@ -142,34 +143,6 @@ class LayoutBranchScore(Layout):
                 }
             }
 
-class BarPlotLayout:
-    def __init__(self, 
-    name="Branch Length Barplot", prop="dist", fill_color="blue", 
-    column=0, width=200, size_range=[0,1]):
-        self.name = name
-        self.fill_color = fill_color
-        self.column = column
-        self.width = width
-        
-        #self.scale = scale
-        self.active = True
-        self.size_range = [0, 1]
-
-    def get_size(self, node):
-        minval, maxval = self.size_range
-        return float(node.props.get(prop, 0)) / maxval * self.width
-
-    def draw_node(self, node, collapsed=False):
-        if node.is_leaf:
-            bar_width = self.get_size(node)
-            #yield LineFace(wmax=bar_width, style={'stroke': 'black', 'stroke-width': 2}, position='aligned', column=self.column+1)
-            yield RectFace(wmax=bar_width, style={'fill': self.fill_color}, position='aligned', column=self.column)
-
-    def draw_tree(self, tree):
-        max_width = self.size_range[1] * self.width
-        yield TextFace(self.name, rotation=-45, position='header', column=self.column)
-        #yield LineFace(wmax=max_width, style={'stroke': 'black', 'stroke-width': 2}, position='header', column=self.column)
-        
 class LayoutBarplot(Layout):
     def __init__(self, name="Barplot", prop=None, width=200, color_prop=None, 
         fill_color="red", column=0, size_range=[], 
@@ -344,3 +317,130 @@ class LayoutBubble(Layout):
                 yield {
                     'dot': style_dot,
                 }
+
+class LayoutHeatmap(Layout):
+    def __init__(self, name=None, column=0, width=70, height=None, 
+            padding_x=1, padding_y=0, prop=None, internal_rep=None,
+            value_color=None, value_range=[], color_range=None, minval=0, maxval=None, 
+            absence_color="#EBEBEB", show_text=False,
+            legend=True):
+
+        self.aligned_faces = True
+
+        self.prop = prop
+        self.internal_prop = add_suffix(prop, internal_rep)
+        self.column = column
+        self.value_color = value_color
+        self.value_range = value_range
+        self.color_range = color_range
+        self.absence_color = absence_color
+        self.maxval = maxval
+        self.minval = minval
+
+        self.width = width
+        self.height = height
+        self.padding_x = padding_x
+        self.padding_y = padding_y
+        self.show_text = show_text
+        self.legend = legend
+        self.active = True
+        self.default_collapsed_style = DEFAULT_COLLAPSED_STYLE
+        
+        super().__init__(name=name,
+                            draw_node=self.draw_node,
+                            draw_tree=self.draw_tree,
+                            active=self.active)
+
+    def draw_tree(self, tree):
+        first_key = min(self.color_range.keys())
+        last_key = max(self.color_range.keys())
+        middle_key = sorted(self.color_range.keys())[len(self.color_range) // 2]
+        # Provide collapsed node style
+        
+        yield {"collapsed": self.default_collapsed_style}
+        # yield TextFace(self.prop, rotation=-90, 
+        # fs_min=6, #fs_max=12,
+        # position='header', column=self.column)
+        # # 
+        yield BoxFace(
+            wmax=self.width,
+            hmax=self.width*2, 
+            text=TextFace(self.prop, rotation=-90, fs_min=6, fs_max=20,
+            column=self.column),
+            column=self.column,
+            position='header',
+            style={'fill': 'white', 'opacity': 1},
+            zoomable=True
+        )
+        if self.legend:
+            yield LegendFace(title=self.name,
+                variable='continuous',
+                value_range=[self.minval, self.maxval],
+                color_range=[
+                    self.color_range[last_key],
+                    self.color_range[middle_key],
+                    self.color_range[first_key],
+                ]
+                )
+
+    def draw_node(self, node, collapsed):
+         # Determine value source
+        heatmap_val = None
+        prop_key = None
+        
+        if node.props.get(self.prop) not in (None, 'NaN') and node.is_leaf:
+            heatmap_val = node.props[self.prop]
+            prop_key = self.prop
+        elif node.is_leaf and node.props.get(self.internal_prop) not in (None, 'NaN'):
+            heatmap_val = node.props[self.internal_prop]
+            prop_key = self.prop
+            
+        elif node.props.get(self.internal_prop) not in (None, 'NaN'):
+            heatmap_val = node.props[self.internal_prop]
+            prop_key = self.prop
+
+        # # Construct tooltip
+        # tooltip = ""
+        # if node.name:
+        #     tooltip += f"<b>{node.name}</b><br>"
+        # if prop_key and heatmap_val not in (None, 'NaN'):
+        #     tooltip += f"<br>{prop_key}: {heatmap_val}<br>"
+
+        if heatmap_val not in (None, 'NaN'):
+            try:
+                val = float(heatmap_val)
+                text = f"{val:.2f}" if self.show_text else ""
+                color = self.value_color.get(val, self.absence_color)
+            except ValueError:
+                text = "NA"
+                color = self.absence_color
+        else:
+            text = "NA"
+            color = self.absence_color
+
+        if node.is_leaf:
+            yield BoxFace(
+                wmax=self.width, hmax=self.height,   
+                style={
+                    'fill': color,
+                    "stroke-width": self.padding_x,
+                    "stroke": "white",
+                    }, 
+                position='aligned', 
+                text=text,
+                column=self.column,
+                zoomable=True
+            )
+        if collapsed:
+            yield BoxFace(
+                wmax=self.width, hmax=self.height,
+                style={
+                    'fill': color,
+                    "stroke-width": self.padding_x,
+                    "stroke": "white",
+                    }, 
+                position='aligned', 
+                text=text,
+                column=self.column,
+                zoomable=True
+            )

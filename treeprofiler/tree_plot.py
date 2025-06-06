@@ -125,8 +125,8 @@ def poplulate_plot_args(plot_args_p):
         description="Prop layout parameters")
     group.add_argument('--column-width',
         type=int,
-        default=20,
-        help="customize column width of each layout.[default: 20]"
+        default=50,
+        help="customize column width of each layout.[default: 50]"
     )
     group.add_argument('--barplot-width',
         type=float,

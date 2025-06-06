@@ -2,7 +2,7 @@ from collections import OrderedDict, namedtuple
 from math import pi
 import random, string
 from treeprofiler.src.utils import random_color, add_suffix
-from .custom_faces import BoxFace, RotatedTextRectFace
+from .custom_faces import BoxFace
 
 from ete4.smartview import Layout, TextFace, LegendFace
 from ete4.smartview.faces import Face

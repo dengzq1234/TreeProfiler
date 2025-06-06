@@ -25,7 +25,7 @@ from treeprofiler.tree_image import get_image
 #     text_layouts, taxon_layouts, staple_layouts, 
 #     conditional_layouts, seq_layouts, profile_layouts, phylosignal_layouts)
 from treeprofiler.layouts import (text_layouts, staple_layouts, conditional_layouts, 
-                                    taxon_layouts, seq_layouts )
+                                    taxon_layouts, seq_layouts, profile_layouts)
 from ete4.smartview import Layout, BASIC_LAYOUT
 
 import treeprofiler.src.utils as utils
@@ -757,13 +757,20 @@ def run(args):
                 matrix, value2color, all_profiling_values = multiple2matrix(tree, profiling_prop, 
                 prop2type=prop2type, color_config=color_config, eteformat_flag=eteformat_flag, 
                 profiling_list=profiling_list)
+
+                # matrix_layout = profile_layouts.LayoutPropsMatrixBinary(
+                #     name=f"Profiling_{profiling_prop}", prop=profiling_prop, 
+                #     matrix=matrix, matrix_props=all_profiling_values, value_range=[0,1],
+                #     value_color=value2color, column=level, poswidth=args.column_width)
                 
-                matrix_layout = profile_layouts.LayoutPropsMatrixBinary(name=f"Profiling_{profiling_prop}",
-                prop=profiling_prop, matrix=matrix, matrix_props=all_profiling_values, value_range=[0,1],
-                value_color=value2color, column=level, poswidth=args.column_width)
+                matrix_layout = profile_layouts.ProfileLayout(
+                name=f"Profiling_{profiling_prop}", matrix=matrix,
+                matrix_props=all_profiling_values
+                )
                 level += 1
                 layouts.append(matrix_layout)
-                
+                visualized_props.append(profiling_prop)
+
                 if args.profiling_output:
                     # leaf only
                     leaves = [leaf.name for leaf in tree.leaves()]

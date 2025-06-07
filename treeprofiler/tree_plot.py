@@ -765,7 +765,7 @@ def run(args):
                 
                 matrix_layout = profile_layouts.ProfileLayout(
                 name=f"Profiling_{profiling_prop}", matrix=matrix,
-                matrix_props=all_profiling_values
+                matrix_props=all_profiling_values, column=level, poswidth=args.column_width
                 )
                 level += 1
                 layouts.append(matrix_layout)

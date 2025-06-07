@@ -21,13 +21,14 @@ class ProfileLayout(Layout):
     def __init__(self, name='Profile Layout', 
         matrix={}, matrix_props=[], 
         value_range=(0,1), color_range=('#FFFFFF', '#f00'), 
-        poswidth=15, active=True, legend=True):
+        column=0, poswidth=15, active=True, legend=True):
         
         self.name = name
         self.matrix = matrix
         self.matrix_props = matrix_props
         self.value_range = value_range
         self.color_range = color_range
+        self.column = column
         self.poswidth = poswidth
         self.active = active
         self.legend = legend
@@ -45,7 +46,8 @@ class ProfileLayout(Layout):
             self.matrix_props, 
             hmax=30, 
             rotation=-90,
-            position='header'
+            position='header',
+            column=self.column
         )
         if self.legend:
             yield LegendFace(title=self.name,
@@ -61,9 +63,11 @@ class ProfileLayout(Layout):
                 yield HeatmapFace(values,
                                 value_range=self.value_range,
                                 color_range=self.color_range,
-                                position='aligned')
+                                position='aligned',
+                                column=self.column)
             if collapsed:
                 yield HeatmapFace(values,
                                 value_range=self.value_range,
                                 color_range=self.color_range,
-                                position='aligned')
+                                position='aligned',
+                                column=self.column)

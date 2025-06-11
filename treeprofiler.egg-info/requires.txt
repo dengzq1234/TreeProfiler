@@ -1,8 +1,0 @@
-numpy<2,>=1.25
-biopython>=1.8
-selenium>=4.24.0
-scipy>=1.8.0
-matplotlib>=3.4.0
-pymc>=5.0.0
-pyvirtualdisplay
-webdriver_manager>=4.0

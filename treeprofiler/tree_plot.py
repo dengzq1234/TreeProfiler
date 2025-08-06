@@ -655,13 +655,26 @@ def run(args):
             visualized_props.extend([utils.add_suffix(prop, 'counter') for prop in args.rectangle_layout])
 
         if layout == 'background-layout':
-            background_layouts, level, color_dict = get_background_layouts(tree, args.background_layout, 
-            level, prop2type=prop2type, column_width=args.column_width, 
-            padding_x=args.padding_x, padding_y=args.padding_y, color_config=color_config)
-            layouts.extend(background_layouts)
-            total_color_dict.append(color_dict)
-            visualized_props.extend(args.background_layout)
-            visualized_props.extend([utils.add_suffix(prop, 'counter') for prop in args.background_layout])
+            categorical_props = [prop for prop in args.background_layout if prop2type.get(prop) in [str, list, bool, None]]
+            if categorical_props:
+                background_layouts, level, color_dict = get_background_layouts(tree, args.background_layout, 
+                level, prop2type=prop2type, column_width=args.column_width, 
+                padding_x=args.padding_x, padding_y=args.padding_y, color_config=color_config)
+                layouts.extend(background_layouts)
+                total_color_dict.append(color_dict)
+                visualized_props.extend(args.background_layout)
+                visualized_props.extend([utils.add_suffix(prop, 'counter') for prop in args.background_layout])
+            
+            numerical_props = [prop for prop in args.background_layout if prop2type.get(prop) in [float, int]]
+            if numerical_props:
+                background_layouts, level, color_dict = get_gradient_background_layouts(tree, args.background_layout, 
+                level, prop2type=prop2type, column_width=args.column_width, 
+                color_config=color_config)
+
+                layouts.extend(background_layouts)
+                total_color_dict.append(color_dict)
+                visualized_props.extend(args.background_layout)
+                visualized_props.extend([utils.add_suffix(prop, 'counter') for prop in args.background_layout])
 
         if layout == 'binary-layout':
             binary_layouts, level, color_dict = get_binary_layouts(tree, args.binary_layout, level, 
@@ -1148,7 +1161,7 @@ def get_acr_discrete_layouts(tree, props, level, prop2type, column_width=70, pad
 
 def get_acr_continuous_layouts(tree, props, level, prop2type, padding_x=1, padding_y=0):
     ncolors = 40
-    gradientscolor = utils.build_color_gradient(ncolors, colormap_name='jet')
+    gradientscolor = utils.build_color_gradient(ncolors, colormap_name='coolwarm')
     layouts = []
     for prop in props:
         try:
@@ -1183,7 +1196,7 @@ def get_ls_layouts(tree, props, level, prop2type, padding_x=1, padding_y=0, colo
     
     for prop in props:
         value2color = {}
-        gradientscolor = utils.build_color_gradient(ncolors, colormap_name='jet')
+        gradientscolor = utils.build_color_gradient(ncolors, colormap_name='coolwarm')
 
         for suffix in [precision_suffix, sensitivity_suffix, f1_suffix]:
             
@@ -1511,6 +1524,88 @@ def get_background_layouts(tree, props, level, prop2type, column_width=70, paddi
         level += 1
     return layouts, level, prop_color_dict
 
+def get_gradient_background_layouts(tree, props, level, prop2type, column_width=70, color_config=None, internal_rep='avg'):
+    """
+    Output dictionary of each score prop and corresponding color.
+    """
+
+    def parse_color_config(prop, color_config, minval, maxval):
+        max_color = 'red'
+        min_color = 'white'
+        mid_color = None
+        value2color = {}
+
+        prop_config = color_config.get(prop, {})
+        color_dict = prop_config.get('value2color', {})
+
+        if color_dict:
+            value2color = {float(key): value for key, value in color_dict.items()}
+
+        detail2color = prop_config.get('detail2color', {})
+
+        temp_min_color, temp_min_val = detail2color.get('color_min', (None, None))
+        temp_max_color, temp_max_val = detail2color.get('color_max', (None, None))
+        temp_mid_color, temp_mid_val = detail2color.get('color_mid', (None, None))
+
+        if temp_max_color:
+            max_color = temp_max_color
+        if temp_min_color:
+            min_color = temp_min_color
+        if temp_mid_color:
+            mid_color = temp_mid_color
+
+        if temp_min_val:
+            minval = float(temp_min_val)
+        if temp_max_val:
+            maxval = float(temp_max_val)
+        ncolors = 40
+        gradientscolor = utils.build_custom_gradient(ncolors, min_color, max_color, mid_color)
+
+        return gradientscolor, value2color, minval, maxval
+
+    layouts = []
+   
+    for prop in props:
+        # Get leaf values of each prop
+        leaf_all_values = np.array(sorted(list(set(utils.tree_prop_array(tree, prop, numeric=True))))).astype('float64')
+
+        # Get internal values of each prop
+        internal_prop = utils.add_suffix(prop, internal_rep)
+        internalnode_all_values = np.array(sorted(list(set(utils.tree_prop_array(tree, internal_prop, numeric=True))))).astype('float64')
+        all_values = np.concatenate((leaf_all_values, internalnode_all_values))
+        all_values = all_values[~np.isnan(all_values)]
+        value2color = {}
+        minval, maxval = all_values.min(), all_values.max()
+
+        if color_config and color_config.get(prop) is not None:
+            gradientscolor, value2color, minval, maxval = parse_color_config(prop, color_config, minval, maxval)
+        else:
+            ncolors = 40
+            gradientscolor = utils.build_color_gradient(ncolors, colormap_name='coolwarm')
+
+        # Preload corresponding gradient color of each value
+        num = len(gradientscolor)
+        index_values = np.linspace(minval, maxval, num)
+
+        for search_value in all_values:
+            if search_value not in value2color:
+                index = np.abs(index_values - search_value).argmin() + 1
+                value2color[search_value] = gradientscolor[index]
+    
+        # Get corresponding gradient color on the fly of visualization
+        layout = staple_layouts.LayoutGradientBackground(
+            name="GradientBackground_"+prop,
+            color_dict=value2color,
+            prop=prop,
+            internal_rep=internal_rep,
+            value_range=[minval, maxval],
+            color_range=[gradientscolor[num], gradientscolor[num//2], gradientscolor[1]]
+        )
+        layouts.append(layout)
+    
+    return layouts, level, value2color
+
+
 def get_binary_layouts(tree, props, level, prop2type, column_width=70, reverse=False, padding_x=1, padding_y=0, color_config=None, same_color=False, aggregate=False):
     prop_color_dict = {}
     layouts = []
@@ -1615,7 +1710,7 @@ def get_branchscore_layouts(tree, props, prop2type, padding_x=1, padding_y=0, in
             gradientscolor, value2color, minval, maxval = parse_color_config(prop, color_config, minval, maxval)
         else:
             ncolors = 40
-            gradientscolor = utils.build_color_gradient(ncolors, colormap_name='jet')
+            gradientscolor = utils.build_color_gradient(ncolors, colormap_name='coolwarm')
 
         # Preload corresponding gradient color of each value
         num = len(gradientscolor)
@@ -1781,7 +1876,7 @@ def get_categorical_bubble_layouts(tree, props, level, prop2type, column_width=7
         level += 1
     return layouts, level, prop_color_dict
 
-def get_numerical_bubble_layouts(tree, props, level, prop2type, padding_x=0, padding_y=0, internal_rep='avg', bubble_range=[], color_config=None):
+def get_numerical_bubble_layouts(tree, props, level, prop2type, padding_x=0, padding_y=0, internal_rep='avg', bubble_range=[], unicolor=True, color_config=None):
     def process_prop_values(tree, prop):
         """Extracts and processes property values, excluding NaNs."""
         prop_values = np.concatenate((
@@ -1793,7 +1888,7 @@ def get_numerical_bubble_layouts(tree, props, level, prop2type, padding_x=0, pad
     prop_color_dict = {}
     layouts = []
     max_radius = 15
-    
+    default_color = 'red'
     for prop in props:
         prop_values = process_prop_values(tree, prop)
 
@@ -1814,7 +1909,7 @@ def get_numerical_bubble_layouts(tree, props, level, prop2type, padding_x=0, pad
             max_color = 'red'
             min_color = 'white'
             mid_color = None
-
+ 
             color_dict = color_config.get(prop, {}).get('value2color', {})
             value2color = {float(k): v for k, v in color_dict.items()} if color_dict else {}
             detail2color = color_config.get(prop, {}).get('detail2color', {})
@@ -1835,34 +1930,61 @@ def get_numerical_bubble_layouts(tree, props, level, prop2type, padding_x=0, pad
                 maxval = float(temp_max_val)
             ncolors = 40
             gradientscolor = utils.build_custom_gradient(ncolors, min_color, max_color, mid_color)
+            # assign color to each value
+            if max_val == min_val:
+                value2color = {val: gradientscolor[0] for val in prop_values}
+            else:
+                value2color = {}
+                for val in prop_values:
+                    
+                    # Normalize the value to a scale between 0 and 1
+                    normalized_val = (val - min_val) / (max_val - min_val)
+                    
+                    # Scale it to match the length of gradientscolor
+                    color_index = int(normalized_val * (len(gradientscolor) - 1))
+                    if color_index == 0:
+                        color_index = 1
+
+                    # Assign the color from the gradient
+                    value2color[val] = gradientscolor[color_index+1]
+        elif unicolor:
+            value2color = {val: default_color for val in prop_values}
+            gradientscolor = [default_color] * 3
         else:
             ncolors = 40
-            gradientscolor = utils.build_color_gradient(ncolors, colormap_name='jet')
+            gradientscolor = utils.build_color_gradient(ncolors, colormap_name='coolwarm')
         
-        # assign color to each value
-        if max_val == min_val:
-            value2color = {val: gradientscolor[0] for val in prop_values}
-        else:
-            value2color = {}
-            for val in prop_values:
-                
-                # Normalize the value to a scale between 0 and 1
-                normalized_val = (val - min_val) / (max_val - min_val)
-                
-                # Scale it to match the length of gradientscolor
-                color_index = int(normalized_val * (len(gradientscolor) - 1))
-                if color_index == 0:
-                    color_index = 1
+            # assign color to each value
+            if max_val == min_val:
+                value2color = {val: gradientscolor[0] for val in prop_values}
+            else:
+                value2color = {}
+                for val in prop_values:
+                    
+                    # Normalize the value to a scale between 0 and 1
+                    normalized_val = (val - min_val) / (max_val - min_val)
+                    
+                    # Scale it to match the length of gradientscolor
+                    color_index = int(normalized_val * (len(gradientscolor) - 1))
+                    if color_index == 0:
+                        color_index = 1
 
-                # Assign the color from the gradient
-                value2color[val] = gradientscolor[color_index+1]
+                    # Assign the color from the gradient
+                    value2color[val] = gradientscolor[color_index+1]
+        
         num = len(gradientscolor)
         # Configure and add layout
+        if unicolor and not (color_config and color_config.get(prop)):
+            color_range = [default_color] * 3
+        else:
+            num = len(gradientscolor) - 1
+            color_range = [gradientscolor[num], gradientscolor[num//2], gradientscolor[1]]
+
         layout = staple_layouts.LayoutBubbleNumerical(name=f'Numerical-Bubble_{prop}', 
         column=level, prop=prop, max_radius=max_radius, abs_maxval=abs_maxval, 
         padding_x=padding_x, padding_y=padding_y, value2color=value2color, 
         bubble_range=bubble_range, 
-        color_range=[gradientscolor[num], gradientscolor[num//2], gradientscolor[1]],
+        color_range=color_range,
         internal_rep=internal_rep)
 
         layouts.append(layout)

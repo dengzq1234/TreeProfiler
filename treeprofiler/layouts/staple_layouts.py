@@ -658,3 +658,67 @@ class LayoutBubbleNumerical(TreeLayout):
             node.sm_style["size"] = bubble_size
             node.sm_style["fgcolor"] = bubble_color
             node.sm_style["fgopacity"] = self.fgopacity
+
+class LayoutGradientBackground(TreeLayout):
+    def __init__(self, name, color_dict, prop, internal_rep=None, \
+        value_range=None, color_range=None, show_score=False, legend=True, active=True):
+        super().__init__(name)
+        self.aligned_faces = True
+        self.prop = prop
+        if internal_rep:
+            self.internal_prop = add_suffix(prop, internal_rep)
+        else:
+            self.internal_prop = None
+        self.color_dict = color_dict
+        self.legend = legend
+        self.absence_color = "lightgray"
+        self.value_range = value_range
+        self.color_range = color_range
+        self.show_score = show_score
+        self.line_width = 3
+        self.active = active
+
+    def set_tree_style(self, tree, tree_style):
+        if self.legend:
+            if self.color_dict:
+                tree_style.add_legend(title=self.name,
+                                    variable='continuous',
+                                    value_range=self.value_range,
+                                    color_range=self.color_range,
+                                    )
+    
+    def set_node_style(self, node):
+        prop_score = node.props.get(self.prop)
+        if prop_score:
+            prop_score = float(prop_score)
+            tooltip = ""
+            if node.name:
+                tooltip += f'<b>{node.name}</b><br>'
+            if self.prop:
+                tooltip += f'<br>{self.prop}: {prop_score}<br>'
+            
+            if self.color_dict:
+                color = self.color_dict.get(prop_score, self.absence_color)
+                # align_link_face = AlignLinkFace(width=self.width*2, height=None,
+                #     stroke_color=color, stroke_width=2, line_type=0, opacity=0.7)
+                node.sm_style["bgcolor"] = color
+                node.sm_style["fgopacity"] = 0.7
+                node.sm_style['outline_color'] = color
+                # if node.is_leaf:
+                #     node.add_face(align_link_face,
+                #         position='branch_right',
+                #         column=0,
+                #         )
+        elif node.is_leaf and node.props.get(self.internal_prop):
+            prop_score = float(node.props.get(self.internal_prop))
+            color = self.color_dict.get(prop_score, self.absence_color)
+            node.sm_style["bgcolor"] = color
+            node.sm_style["fgopacity"] = 0.7
+            node.sm_style['outline_color'] = color
+            
+        elif node.props.get(self.internal_prop):
+            prop_score = float(node.props.get(self.internal_prop))
+            color = self.color_dict.get(prop_score, self.absence_color)
+            node.sm_style["bgcolor"] = color
+            node.sm_style["fgopacity"] = 0.7
+            node.sm_style['outline_color'] = color

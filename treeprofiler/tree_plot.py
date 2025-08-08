@@ -1888,7 +1888,7 @@ def get_numerical_bubble_layouts(tree, props, level, prop2type, padding_x=0, pad
     prop_color_dict = {}
     layouts = []
     max_radius = 15
-    default_color = 'red'
+    #default_color = 'red'
     for prop in props:
         prop_values = process_prop_values(tree, prop)
 
@@ -1948,6 +1948,7 @@ def get_numerical_bubble_layouts(tree, props, level, prop2type, padding_x=0, pad
                     # Assign the color from the gradient
                     value2color[val] = gradientscolor[color_index+1]
         elif unicolor:
+            default_color = paired_color[level]
             value2color = {val: default_color for val in prop_values}
             gradientscolor = [default_color] * 3
         else:

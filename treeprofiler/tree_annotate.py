@@ -115,7 +115,7 @@ def populate_annotate_args(parser):
         choices=['NCBI', 'GTDB', 'MOTUS', 'customdb'],
         help="<NCBI|GTDB> for taxonomic annotation or fetch taxatree")
     add('--gtdb-version', type=int,
-        choices=[95, 202, 207, 214, 220],
+        choices=[95, 202, 207, 214, 220, 226],
         help='GTDB version for taxonomic annotation, such as 220. If it is not provided, the latest version will be used.')
     add('--taxa-dump', type=str,
         help='Path to taxonomic database dump file for specific version, such as gtdb taxadump https://github.com/etetoolkit/ete-data/raw/main/gtdb_taxonomy/gtdblatest/gtdb_latest_dump.tar.gz or NCBI taxadump https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz')
